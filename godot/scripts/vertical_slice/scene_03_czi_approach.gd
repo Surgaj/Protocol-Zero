@@ -20,6 +20,7 @@ func _ready() -> void:
 	player.call("set_movement_camera", gameplay_camera)
 	maya.call("configure", player, Vector3(-0.9, 0.90, -5.0), Vector3(-1.65, 0.90, -5.15))
 	_build_ui()
+	_build_entry_trigger()
 
 func _make_material(color: Color) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
@@ -154,7 +155,7 @@ func _build_ui() -> void:
 	panel.add_child(objective_label)
 	status_label = Label.new()
 	status_label.position = Vector2(20, 44)
-	status_label.text = "OBJETIVO: alcance a entrada do CZI-07.\nObserve Maya — o jogo não explica o que ela sente."
+	status_label.text = "OBJETIVO: alcance a entrada do CZI-07."
 	status_label.add_theme_font_size_override("font_size", 15)
 	panel.add_child(status_label)
 	virtual_stick = Control.new()
@@ -167,3 +168,23 @@ func _build_ui() -> void:
 	virtual_stick.offset_right = 218.0
 	virtual_stick.offset_bottom = -30.0
 	layer.add_child(virtual_stick)
+
+func _build_entry_trigger() -> void:
+	# A porta ainda é greybox fechada visualmente; alcançar o limiar carrega o interior.
+	# Maya fica fora: só Elias pode disparar a troca de cena.
+	var area := Area3D.new()
+	area.name = "CZIEntryTrigger"
+	area.position = Vector3(0, 1.0, -5.30)
+	add_child(area)
+
+	var collision := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(1.10, 2.2, 0.70)
+	collision.shape = shape
+	area.add_child(collision)
+	area.body_entered.connect(_on_czi_entry_reached)
+
+func _on_czi_entry_reached(body: Node3D) -> void:
+	if body.name != "Elias_GreyCapsule":
+		return
+	get_tree().change_scene_to_file("res://scenes/vertical_slice/scene_04_bunker_wakes.tscn")
