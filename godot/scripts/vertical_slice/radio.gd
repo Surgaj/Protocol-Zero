@@ -32,7 +32,7 @@ var _noise_gain: float = 0.26
 var _carrier_gain: float = 0.0
 var _carrier_phase: float = 0.0
 var _secondary_phase: float = 0.0
-var _rng := RandomNumberGenerator.new()
+var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 # Diagnóstico temporário do Milestone 0.2.
 var _interact_button: Button
@@ -41,17 +41,17 @@ var _horizontal_distance: float = INF
 
 func _ready() -> void:
 	_rng.randomize()
-	var proximity := get_node_or_null("Proximity") as Area3D
+	var proximity_area: Area3D = get_node_or_null("Proximity") as Area3D
 	_audio = get_node_or_null("StaticAudio") as AudioStreamPlayer3D
 
 	# O Area3D continua existindo, mas não é mais a única fonte de verdade.
-	if proximity != null:
-		proximity.monitoring = true
-		proximity.monitorable = true
-		proximity.collision_layer = 1
-		proximity.collision_mask = 1
-		proximity.body_entered.connect(_on_body_entered)
-		proximity.body_exited.connect(_on_body_exited)
+	if proximity_area != null:
+		proximity_area.monitoring = true
+		proximity_area.monitorable = true
+		proximity_area.collision_layer = 1
+		proximity_area.collision_mask = 1
+		proximity_area.body_entered.connect(_on_body_entered)
+		proximity_area.body_exited.connect(_on_body_exited)
 
 	if get_parent() != null:
 		_player = get_parent().get_node_or_null("Elias_GreyCapsule") as CharacterBody3D
@@ -78,7 +78,6 @@ func _process(delta: float) -> void:
 		_fill_audio_buffer()
 
 func begin_tuning() -> bool:
-	# Recalcula no instante do toque para não depender de um sinal físico anterior.
 	_refresh_player_proximity()
 	if locked or not player_near:
 		return false
@@ -99,7 +98,7 @@ func begin_tuning() -> bool:
 func set_frequency(value: float) -> void:
 	if locked:
 		return
-	current_frequency = clamp(value, min_frequency, max_frequency)
+	current_frequency = clampf(value, min_frequency, max_frequency)
 	_update_audio_character()
 
 func stop_tuning() -> void:
@@ -114,14 +113,12 @@ func _bind_debug_ui() -> void:
 	if get_parent() == null:
 		return
 
-	var ui := get_parent().get_node_or_null("GreyboxUI") as CanvasLayer
+	var ui: CanvasLayer = get_parent().get_node_or_null("GreyboxUI") as CanvasLayer
 	if ui == null:
 		return
 
 	_interact_button = ui.get_node_or_null("RadioInteract") as Button
 	if _interact_button != null:
-		# Para o diagnóstico, eliminamos qualquer dúvida de anchor em retrato.
-		# O viewport lógico é 720x1280 e o stretch escala isso para o device.
 		_interact_button.anchor_left = 0.0
 		_interact_button.anchor_top = 0.0
 		_interact_button.anchor_right = 0.0
@@ -141,13 +138,11 @@ func _bind_debug_ui() -> void:
 
 func _sync_debug_ui() -> void:
 	if _interact_button != null:
-		# Fonte de verdade temporária: o botão lê o estado atual a cada frame.
-		# Assim isolamos completamente a hipótese de um signal ter sido perdido.
 		_interact_button.visible = player_near and not tuning and not locked
 		_interact_button.disabled = not player_near
 
 	if _debug_label != null:
-		var distance_text := "--" if is_inf(_horizontal_distance) else "%.2f" % _horizontal_distance
+		var distance_text: String = "--" if is_inf(_horizontal_distance) else "%.2f" % _horizontal_distance
 		_debug_label.text = "dist: %s m\nnear: %s" % [distance_text, str(player_near)]
 
 func _refresh_player_proximity() -> void:
@@ -163,10 +158,8 @@ func _refresh_player_proximity() -> void:
 			_horizontal_distance = INF
 			return
 
-	# Só usamos distância horizontal. Diferenças pequenas de Y não devem impedir
-	# o prompt de aparecer quando o jogador está claramente ao lado do aparelho.
-	var radio_pos := global_position
-	var player_pos := _player.global_position
+	var radio_pos: Vector3 = global_position
+	var player_pos: Vector3 = _player.global_position
 	_horizontal_distance = Vector2(
 		player_pos.x - radio_pos.x,
 		player_pos.z - radio_pos.z
@@ -184,17 +177,17 @@ func _set_player_near(value: bool) -> void:
 	proximity_changed.emit(player_near)
 
 func _update_lock(delta: float) -> void:
-	var distance := abs(current_frequency - target_frequency)
-	var in_lock_zone := distance <= tolerance
+	var distance: float = absf(current_frequency - target_frequency)
+	var in_lock_zone: bool = distance <= tolerance
 
 	if in_lock_zone:
 		lock_timer += delta
 	else:
-		lock_timer = max(0.0, lock_timer - delta * 2.0)
+		lock_timer = maxf(0.0, lock_timer - delta * 2.0)
 
-	var proximity := _frequency_proximity()
-	var progress := clamp(lock_timer / lock_duration, 0.0, 1.0)
-	tuning_feedback.emit(current_frequency, proximity, in_lock_zone, progress)
+	var frequency_proximity: float = _frequency_proximity()
+	var progress: float = clampf(lock_timer / lock_duration, 0.0, 1.0)
+	tuning_feedback.emit(current_frequency, frequency_proximity, in_lock_zone, progress)
 
 	if lock_timer >= lock_duration:
 		_complete_lock()
@@ -215,18 +208,17 @@ func _complete_lock() -> void:
 	signal_locked.emit(current_frequency)
 
 func _frequency_proximity() -> float:
-	var distance := abs(current_frequency - target_frequency)
-	return 1.0 - clamp(distance / discovery_band, 0.0, 1.0)
+	var distance: float = absf(current_frequency - target_frequency)
+	return 1.0 - clampf(distance / discovery_band, 0.0, 1.0)
 
 func _update_audio_character() -> void:
-	var proximity := _frequency_proximity()
+	var frequency_proximity: float = _frequency_proximity()
 
-	# Longe: ruído branco dominante. Perto: ruído cai e um carrier tonal surge.
-	_noise_gain = lerp(0.30, 0.055, proximity)
-	if proximity <= 0.18:
+	_noise_gain = lerpf(0.30, 0.055, frequency_proximity)
+	if frequency_proximity <= 0.18:
 		_carrier_gain = 0.0
 	else:
-		_carrier_gain = ((proximity - 0.18) / 0.82) * 0.18
+		_carrier_gain = ((frequency_proximity - 0.18) / 0.82) * 0.18
 
 func _fill_audio_buffer() -> void:
 	if _audio == null or not _audio.playing:
@@ -236,17 +228,17 @@ func _fill_audio_buffer() -> void:
 	if _playback == null or _generator == null:
 		return
 
-	var frames := _playback.get_frames_available()
-	var mix_rate := _generator.mix_rate
-	var proximity := _frequency_proximity()
-	var carrier_hz := 760.0 + current_frequency * 1.25
-	var secondary_gain := max(0.0, (proximity - 0.62) / 0.38) * 0.075
+	var frames: int = _playback.get_frames_available()
+	var mix_rate: float = _generator.mix_rate
+	var frequency_proximity: float = _frequency_proximity()
+	var carrier_hz: float = 760.0 + current_frequency * 1.25
+	var secondary_gain: float = maxf(0.0, (frequency_proximity - 0.62) / 0.38) * 0.075
 
-	for _i in range(frames):
-		var noise := _rng.randf_range(-1.0, 1.0) * _noise_gain
-		var carrier := sin(_carrier_phase) * _carrier_gain
-		var secondary := sin(_secondary_phase) * secondary_gain
-		var sample := clamp(noise + carrier + secondary, -0.92, 0.92)
+	for _i: int in range(frames):
+		var noise: float = _rng.randf_range(-1.0, 1.0) * _noise_gain
+		var carrier: float = sin(_carrier_phase) * _carrier_gain
+		var secondary: float = sin(_secondary_phase) * secondary_gain
+		var sample: float = clampf(noise + carrier + secondary, -0.92, 0.92)
 		_playback.push_frame(Vector2(sample, sample))
 
 		_carrier_phase = fmod(_carrier_phase + TAU * carrier_hz / mix_rate, TAU)
@@ -261,5 +253,4 @@ func _on_body_entered(body: Node3D) -> void:
 func _on_body_exited(body: Node3D) -> void:
 	if body.name != "Elias_GreyCapsule":
 		return
-	# Não força false aqui: o cálculo horizontal decide e evita flicker na borda.
 	_refresh_player_proximity()
