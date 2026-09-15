@@ -2,7 +2,7 @@ extends SceneTree
 
 # Headless integration smoke test do vertical slice.
 # Valida lógica/integração, NÃO sensação de movimento, áudio audível, legibilidade,
-# responsividade touch ou se diferenças de comportamento são perceptíveis em device real.
+# responsividade touch, timing dramático ou se diferenças de comportamento são perceptíveis em device real.
 # godot --headless --path godot --script res://tests/smoke_test.gd
 
 var _proximity_true_seen: bool = false
@@ -150,6 +150,51 @@ func _run() -> void:
 	if absf(float(maya_coop.get("follow_distance")) - 1.2) > 0.01 or not bool(maya_coop.get("waits_at_doors")) or bool(maya_coop.get("takes_initiative")):
 		_fail("Cena 3 não traduziu confiança em proximidade/espera")
 		return
+	if scene3_coop.get_node_or_null("CZIEntryTrigger") == null:
+		_fail("Cena 3 não possui limiar de entrada para o CZI-07")
+		return
+	scene3_coop.queue_free()
+	await process_frame
 
-	print("SMOKE PASS: rádio + GameState + memória/relação Maya + comportamento espacial Cena 3")
+	# CENA 4 — bunker morto -> desperto. O smoke prova estrutura/estado; sensação/timing ficam para device real.
+	var scene4: Node = _instantiate_scene("res://scenes/vertical_slice/scene_04_bunker_wakes.tscn")
+	if scene4 == null:
+		_fail("não foi possível carregar scene_04_bunker_wakes.tscn")
+		return
+	await process_frame
+	await process_frame
+	var bunker_player: CharacterBody3D = scene4.get_node_or_null("Elias_GreyCapsule") as CharacterBody3D
+	var generator: StaticBody3D = scene4.get_node_or_null("AuxGenerator") as StaticBody3D
+	var bunker_interact: Button = scene4.get_node_or_null("GreyboxUI/GeneratorInteract") as Button
+	var entry_light: OmniLight3D = scene4.get_node_or_null("EntryCeilingLight") as OmniLight3D
+	var corridor_light: OmniLight3D = scene4.get_node_or_null("CorridorLight") as OmniLight3D
+	var distant_light: OmniLight3D = scene4.get_node_or_null("DistantRoomLight") as OmniLight3D
+	var drone: AudioStreamPlayer = scene4.get_node_or_null("BunkerDrone") as AudioStreamPlayer
+	if bunker_player == null or generator == null or bunker_interact == null or entry_light == null or corridor_light == null or distant_light == null or drone == null:
+		_fail("Cena 4 incompleta: player/gerador/luzes/áudio/UI")
+		return
+	if scene4.get_node_or_null("SealedHabitationDoor") == null or scene4.get_node_or_null("DistantRoomFloor") == null:
+		_fail("Cena 4 perdeu a segunda sala/porta narrativa deliberada")
+		return
+	if drone.stream == null:
+		_fail("Cena 4 não configurou AudioStreamGenerator do bunker")
+		return
+
+	bunker_player.global_position = Vector3(generator.global_position.x + 0.8, 0.90, generator.global_position.z)
+	await process_frame
+	await process_frame
+	if not bunker_interact.visible:
+		_fail("INTERAGIR do gerador auxiliar não aparece por proximidade")
+		return
+
+	scene4.call("apply_power_stage_for_test", 3)
+	await process_frame
+	if not bool(scene4.get("power_complete")):
+		_fail("Cena 4 não conclui estado de energia no estágio final")
+		return
+	if entry_light.light_energy <= 0.0 or corridor_light.light_energy <= 0.0 or distant_light.light_energy <= 0.0:
+		_fail("Cena 4 não traduz energia em iluminação sequencial")
+		return
+
+	print("SMOKE PASS: rádio + GameState + Maya + entrada CZI + bunker desperto")
 	quit(0)
