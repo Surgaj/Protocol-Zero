@@ -114,8 +114,9 @@ func build_camera(target_player: CharacterBody3D) -> Camera3D:
 	add_child(camera)
 
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	# Retrato 9:16: size 26 mantém a largura de 14 m da sala legível.
-	camera.size = 26.0
+	# Em retrato, travamos a largura: a sala tem 14 m e deixamos uma pequena margem.
+	camera.keep_aspect = Camera3D.KEEP_WIDTH
+	camera.size = 15.5
 	camera.global_position = target_player.global_position + Vector3(14.5, 17.5, 18.5)
 	camera.look_at(target_player.global_position + Vector3(0, 0.7, 0), Vector3.UP)
 	camera.current = true
