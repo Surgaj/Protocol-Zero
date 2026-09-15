@@ -210,13 +210,13 @@ func _build_ui() -> void:
 	protect.text = "PROTEGER O GERADOR"
 	protect.pressed.connect(func() -> void: _resolve_choice("generator"))
 	choice_panel.add_child(protect)
-	var signal := Button.new()
-	signal.name = "CaptureSignal"
-	signal.position = Vector2(28, 292)
-	signal.size = Vector2(580, 70)
-	signal.text = "CAPTAR O SINAL AGORA"
-	signal.pressed.connect(func() -> void: _resolve_choice("signal"))
-	choice_panel.add_child(signal)
+	var capture_button := Button.new()
+	capture_button.name = "CaptureSignal"
+	capture_button.position = Vector2(28, 292)
+	capture_button.size = Vector2(580, 70)
+	capture_button.text = "CAPTAR O SINAL AGORA"
+	capture_button.pressed.connect(func() -> void: _resolve_choice("signal"))
+	choice_panel.add_child(capture_button)
 	choice_timeout_label = Label.new()
 	choice_timeout_label.position = Vector2(28, 380)
 	choice_timeout_label.text = "DECIDA — 15 s"
