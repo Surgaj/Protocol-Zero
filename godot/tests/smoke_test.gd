@@ -1,6 +1,6 @@
 extends SceneTree
 
-# Headless smoke test: carrega a Cena 1 e confirma os nós mínimos.
+# Headless smoke test: carrega a Cena 1 e confirma os nós mínimos dos Milestones 0.1 e 0.2.
 # godot --headless --path godot --script res://tests/smoke_test.gd
 
 func _initialize() -> void:
@@ -21,26 +21,31 @@ func _run() -> void:
 	var camera := scene.get_node_or_null("GreyboxCamera")
 	var exit_trigger := scene.get_node_or_null("Scene01Exit")
 	var virtual_stick := scene.get_node_or_null("GreyboxUI/VirtualStick")
+	var radio := scene.get_node_or_null("FieldRadio")
+	var proximity := scene.get_node_or_null("FieldRadio/Proximity")
+	var audio := scene.get_node_or_null("FieldRadio/StaticAudio")
+	var interact := scene.get_node_or_null("GreyboxUI/RadioInteract")
+	var dial := scene.get_node_or_null("GreyboxUI/RadioDial")
+	var decoded := scene.get_node_or_null("GreyboxUI/DecodedSignal")
 
-	if player == null:
-		push_error("SMOKE FAIL: Elias_GreyCapsule ausente")
-		quit(1)
-		return
+	var required := {
+		"Elias_GreyCapsule": player,
+		"GreyboxCamera": camera,
+		"Scene01Exit": exit_trigger,
+		"VirtualStick": virtual_stick,
+		"FieldRadio": radio,
+		"RadioProximity": proximity,
+		"StaticAudio": audio,
+		"RadioInteract": interact,
+		"RadioDial": dial,
+		"DecodedSignal": decoded,
+	}
 
-	if camera == null:
-		push_error("SMOKE FAIL: GreyboxCamera ausente")
-		quit(1)
-		return
+	for label in required:
+		if required[label] == null:
+			push_error("SMOKE FAIL: %s ausente" % label)
+			quit(1)
+			return
 
-	if exit_trigger == null:
-		push_error("SMOKE FAIL: Scene01Exit ausente")
-		quit(1)
-		return
-
-	if virtual_stick == null:
-		push_error("SMOKE FAIL: VirtualStick ausente")
-		quit(1)
-		return
-
-	print("SMOKE PASS: scene, player, camera, exit trigger e virtual stick carregados")
+	print("SMOKE PASS: movimento/câmera/touch + rádio/proximidade/dial/áudio/sinal carregados")
 	quit(0)
