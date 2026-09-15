@@ -4,9 +4,9 @@ extends Camera3D
 # A câmera mantém rotação fixa e acompanha apenas posição.
 
 @export var follow_speed: float = 6.0
-@export var camera_offset: Vector3 = Vector3(14.5, 17.5, 18.5)
-@export var follow_min: Vector2 = Vector2(-1.4, -5.2)
-@export var follow_max: Vector2 = Vector2(1.4, 5.2)
+@export var camera_offset: Vector3 = Vector3(8.5, 6.0, 10.0)
+@export var follow_min: Vector2 = Vector2(-0.65, -2.8)
+@export var follow_max: Vector2 = Vector2(0.65, 2.8)
 
 var target: Node3D
 

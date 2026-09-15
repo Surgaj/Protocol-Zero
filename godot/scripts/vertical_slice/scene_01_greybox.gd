@@ -2,6 +2,7 @@ extends Node3D
 
 # PROTOCOL ZERO — Vertical Slice / Scene 01 Greybox
 # Meta mínima: cápsula cinza anda, atravessa uma porta cinza, cena reconhece a travessia.
+# Escala humana de referência: Elias 1,80 m; porta 2,20 m; sala 8 x 12 m.
 
 var objective_label: Label
 var status_label: Label
@@ -55,7 +56,7 @@ func build_environment() -> void:
 	add_child(world)
 
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-58, -28, 0)
+	sun.rotation_degrees = Vector3(-48, -32, 0)
 	sun.light_color = Color("f0f0f0")
 	sun.light_energy = 1.15
 	sun.shadow_enabled = true
@@ -66,43 +67,55 @@ func build_room() -> void:
 	var grey_wall := Color("666666")
 	var grey_door := Color("8a8a8a")
 
-	# Sala 14 x 20. Tudo propositalmente sem arte.
-	add_static_box("Floor", Vector3(14.0, 0.5, 20.0), Vector3(0, -0.25, 0), grey_floor)
-	add_static_box("LeftWall", Vector3(0.5, 3.5, 20.0), Vector3(-6.75, 1.75, 0), grey_wall)
-	add_static_box("RightWall", Vector3(0.5, 3.5, 20.0), Vector3(6.75, 1.75, 0), grey_wall)
-	add_static_box("FrontWall", Vector3(14.0, 3.5, 0.5), Vector3(0, 1.75, 9.75), grey_wall)
+	# Sala humana, não galpão: 8 m x 12 m, paredes de 3 m.
+	add_static_box("Floor", Vector3(8.0, 0.30, 12.0), Vector3(0, -0.15, 0), grey_floor)
 
-	# Parede do fundo dividida para deixar uma abertura real de porta.
-	add_static_box("BackWallLeft", Vector3(5.5, 3.5, 0.5), Vector3(-4.25, 1.75, -9.75), grey_wall)
-	add_static_box("BackWallRight", Vector3(5.5, 3.5, 0.5), Vector3(4.25, 1.75, -9.75), grey_wall)
-	add_static_box("DoorLintel", Vector3(3.0, 0.65, 0.75), Vector3(0, 3.18, -9.62), grey_door)
-	add_static_box("DoorPostLeft", Vector3(0.35, 3.0, 0.75), Vector3(-1.68, 1.5, -9.62), grey_door)
-	add_static_box("DoorPostRight", Vector3(0.35, 3.0, 0.75), Vector3(1.68, 1.5, -9.62), grey_door)
+	# Paredes distantes mantêm altura total; paredes perto da câmera viram cutaway.
+	add_static_box("LeftWall", Vector3(0.30, 3.0, 12.0), Vector3(-3.85, 1.5, 0), grey_wall)
+	add_static_box("RightCutawayLip", Vector3(0.30, 0.65, 12.0), Vector3(3.85, 0.325, 0), Color("5f5f5f"))
+	add_static_box("FrontCutawayLip", Vector3(8.0, 0.65, 0.30), Vector3(0, 0.325, 5.85), Color("5f5f5f"))
 
-	# Pequeno corredor depois da porta para a travessia ser inequívoca.
-	add_static_box("ExitFloor", Vector3(4.5, 0.5, 5.0), Vector3(0, -0.25, -12.25), Color("707070"))
-	add_static_box("ExitWallLeft", Vector3(0.4, 3.0, 5.0), Vector3(-2.05, 1.5, -12.25), Color("5f5f5f"))
-	add_static_box("ExitWallRight", Vector3(0.4, 3.0, 5.0), Vector3(2.05, 1.5, -12.25), Color("5f5f5f"))
+	# Parede do fundo com vão real de 1,40 m x 2,20 m.
+	add_static_box("BackWallLeft", Vector3(3.30, 3.0, 0.30), Vector3(-2.35, 1.5, -5.85), grey_wall)
+	add_static_box("BackWallRight", Vector3(3.30, 3.0, 0.30), Vector3(2.35, 1.5, -5.85), grey_wall)
+	add_static_box("DoorLintel", Vector3(1.80, 0.80, 0.45), Vector3(0, 2.60, -5.78), grey_door)
+	add_static_box("DoorPostLeft", Vector3(0.20, 2.20, 0.45), Vector3(-0.80, 1.10, -5.78), grey_door)
+	add_static_box("DoorPostRight", Vector3(0.20, 2.20, 0.45), Vector3(0.80, 1.10, -5.78), grey_door)
+
+	# Corredor curto depois da porta: apenas o suficiente para provar a travessia.
+	add_static_box("ExitFloor", Vector3(3.0, 0.30, 4.0), Vector3(0, -0.15, -7.75), Color("707070"))
+	add_static_box("ExitWallLeft", Vector3(0.25, 2.6, 4.0), Vector3(-1.38, 1.30, -7.75), Color("5f5f5f"))
+	add_static_box("ExitWallRightLip", Vector3(0.25, 0.65, 4.0), Vector3(1.38, 0.325, -7.75), Color("595959"))
+
+	# Greybox de direção: uma luz discreta puxa o olho para a saída sem virar arte final.
+	var door_light := OmniLight3D.new()
+	door_light.name = "DoorGuideLight"
+	door_light.position = Vector3(0, 2.45, -5.1)
+	door_light.light_color = Color("d7c08a")
+	door_light.light_energy = 1.6
+	door_light.omni_range = 3.4
+	door_light.shadow_enabled = true
+	add_child(door_light)
 
 func build_player() -> CharacterBody3D:
 	var new_player := CharacterBody3D.new()
 	new_player.name = "Elias_GreyCapsule"
-	new_player.position = Vector3(0, 1.15, 6.25)
+	new_player.position = Vector3(0, 0.90, 3.45)
 	new_player.set_script(load("res://scripts/vertical_slice/player_capsule.gd"))
 	add_child(new_player)
 
 	var mesh_instance := MeshInstance3D.new()
 	var mesh := CapsuleMesh.new()
-	mesh.radius = 0.48
-	mesh.height = 2.2
+	mesh.radius = 0.32
+	mesh.height = 1.80
 	mesh.material = make_material(Color("b7b7b7"), 0.95)
 	mesh_instance.mesh = mesh
 	new_player.add_child(mesh_instance)
 
 	var collision := CollisionShape3D.new()
 	var capsule := CapsuleShape3D.new()
-	capsule.radius = 0.48
-	capsule.height = 2.2
+	capsule.radius = 0.32
+	capsule.height = 1.80
 	collision.shape = capsule
 	new_player.add_child(collision)
 	return new_player
@@ -114,11 +127,16 @@ func build_camera(target_player: CharacterBody3D) -> Camera3D:
 	add_child(camera)
 
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	# Em retrato, travamos a largura: a sala tem 14 m e deixamos uma pequena margem.
 	camera.keep_aspect = Camera3D.KEEP_WIDTH
-	camera.size = 15.5
-	camera.global_position = target_player.global_position + Vector3(14.5, 17.5, 18.5)
-	camera.look_at(target_player.global_position + Vector3(0, 0.7, 0), Vector3.UP)
+	camera.size = 9.4
+
+	# 3/4 mais baixo: preserva leitura mobile, mas mostra volume/fachadas como diorama.
+	var offset := Vector3(8.5, 6.0, 10.0)
+	camera.set("camera_offset", offset)
+	camera.set("follow_min", Vector2(-0.65, -2.8))
+	camera.set("follow_max", Vector2(0.65, 2.8))
+	camera.global_position = target_player.global_position + offset
+	camera.look_at(target_player.global_position + Vector3(0, 0.78, 0), Vector3.UP)
 	camera.current = true
 	camera.call("set_target", target_player)
 	return camera
@@ -142,7 +160,7 @@ func build_ui() -> void:
 
 	status_label = Label.new()
 	status_label.position = Vector2(20, 44)
-	status_label.text = "OBJETIVO: atravesse a porta cinza\nTeclado: WASD/setas  •  Mobile/Web: arraste MOVE"
+	status_label.text = "OBJETIVO: atravesse a porta iluminada\nTeclado: WASD/setas  •  Mobile/Web: arraste o círculo"
 	status_label.add_theme_font_size_override("font_size", 15)
 	panel.add_child(status_label)
 
@@ -153,21 +171,21 @@ func build_ui() -> void:
 	virtual_stick.anchor_top = 1.0
 	virtual_stick.anchor_right = 0.0
 	virtual_stick.anchor_bottom = 1.0
-	virtual_stick.offset_left = 28.0
-	virtual_stick.offset_top = -248.0
-	virtual_stick.offset_right = 248.0
-	virtual_stick.offset_bottom = -28.0
+	virtual_stick.offset_left = 30.0
+	virtual_stick.offset_top = -218.0
+	virtual_stick.offset_right = 218.0
+	virtual_stick.offset_bottom = -30.0
 	layer.add_child(virtual_stick)
 
 func build_exit_trigger() -> void:
 	var area := Area3D.new()
 	area.name = "Scene01Exit"
-	area.position = Vector3(0, 1.0, -11.3)
+	area.position = Vector3(0, 1.0, -6.95)
 	add_child(area)
 
 	var collision := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
-	shape.size = Vector3(3.4, 2.5, 1.4)
+	shape.size = Vector3(1.55, 2.2, 1.2)
 	collision.shape = shape
 	area.add_child(collision)
 	area.body_entered.connect(_on_exit_crossed)
@@ -176,4 +194,4 @@ func _on_exit_crossed(body: Node3D) -> void:
 	if body.name != "Elias_GreyCapsule":
 		return
 	objective_label.text = "CENA 1 — PASSAGEM VALIDADA"
-	status_label.text = "A cápsula atravessou a porta. Próximo: interação + sinal."
+	status_label.text = "A cápsula atravessou a porta. Escala + câmera + touch em teste."
