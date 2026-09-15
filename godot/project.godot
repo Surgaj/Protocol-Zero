@@ -5,7 +5,7 @@ config_version=5
 
 [application]
 config/name="Protocol Zero"
-run/main_scene="res://scenes/czi07_dormitory.tscn"
+run/main_scene="res://scenes/vertical_slice/scene_01_greybox.tscn"
 
 [display]
 window/size/viewport_width=1280
