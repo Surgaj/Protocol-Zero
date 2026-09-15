@@ -1,6 +1,7 @@
 extends Node3D
 
 # PROTOCOL ZERO — Vertical Slice / Scene 01 Greybox
+# Pass 0.1b: escala humana + câmera 3/4 mais baixa + touch circular.
 # Meta mínima: cápsula cinza anda, atravessa uma porta cinza, cena reconhece a travessia.
 # Escala humana de referência: Elias 1,80 m; porta 2,20 m; sala 8 x 12 m.
 
