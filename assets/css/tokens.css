@@ -1,0 +1,29 @@
+:root{
+  --void:#080704;
+  --void-soft:#0d0b07;
+  --panel:#151109;
+  --panel-2:#1a150d;
+  --line:rgba(232,163,61,.17);
+  --line-strong:rgba(232,163,61,.29);
+  --amber:#e8a33d;
+  --amber-soft:#b8792c;
+  --rust:#b5502a;
+  --rust-dark:#6f2e1c;
+  --teal:#5fd1c0;
+  --teal-dim:#2a8078;
+  --bone:#e9e2d2;
+  --dim:#8a806d;
+  --dimmer:#544d40;
+  --danger:#c9433a;
+  --green:#82945c;
+  --safe-top:max(env(safe-area-inset-top),0px);
+  --safe-bottom:max(env(safe-area-inset-bottom),0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{
+  margin:0;width:100%;height:100%;
+  background:var(--void);color:var(--bone);
+  overflow:hidden;user-select:none;
+}
+body{font-family:"Barlow",system-ui,-apple-system,sans-serif}
+button{font:inherit;color:inherit}
