@@ -1,0 +1,137 @@
+/* PROTOCOL ZERO — CZI-07 · Desktop Polish V0.4.2
+   Completa a camada visual sem alterar a lógica do jogo. */
+
+/* Nomes precisam continuar legíveis sem virar HUD dominante. */
+.citizen-name{
+  color:#c6bca8;
+  background:rgba(7,6,4,.76);
+  border:1px solid rgba(232,163,61,.09);
+  box-shadow:0 2px 7px rgba(0,0,0,.32);
+}
+.citizen.founder .citizen-name{
+  color:#78e0d0;
+  border-color:rgba(95,209,192,.16);
+}
+
+/* O corredor era a maior área vazia da composição. Mantemos espaço para
+   comportamento dos cidadãos, mas adicionamos infraestrutura discreta. */
+.room-corridor::before{
+  content:"";
+  position:absolute;
+  z-index:2;
+  top:54px;
+  bottom:42px;
+  left:50%;
+  width:1px;
+  transform:translateX(-50%);
+  background:repeating-linear-gradient(
+    180deg,
+    rgba(232,163,61,.10) 0 14px,
+    transparent 14px 40px
+  );
+  opacity:.5;
+  pointer-events:none;
+}
+.room-corridor::after{
+  content:"";
+  position:absolute;
+  z-index:3;
+  left:9%;
+  top:24%;
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:rgba(232,163,61,.32);
+  box-shadow:
+    0 150px 0 rgba(232,163,61,.13),
+    calc(82vw * .25) 74px 0 rgba(95,209,192,.13),
+    calc(82vw * .25) 230px 0 rgba(232,163,61,.10);
+  animation:corridorStatus 3.8s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes corridorStatus{
+  0%,100%{opacity:.38}
+  50%{opacity:.8}
+}
+.corridor-floor{
+  opacity:.44;
+}
+.corridor-floor::before,
+.corridor-floor::after{
+  content:"";
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:1px;
+  background:linear-gradient(180deg,transparent,rgba(233,226,210,.08),transparent);
+}
+.corridor-floor::before{left:10%}
+.corridor-floor::after{right:10%}
+
+/* Desktop: aproveita a área real da sala. A V0.4.1 continua responsável
+   por manter o iPhone seguro; aqui só damos presença maior aos personagens. */
+@media (min-width:900px) and (min-height:640px){
+  .citizen{
+    transform:translate(-50%,-48%);
+    min-width:82px;
+    min-height:108px;
+  }
+  .character-art-wrap{
+    width:72px;
+    height:98px;
+  }
+  .character-shadow{
+    width:46px;
+    height:9px;
+    bottom:16px;
+  }
+  .citizen-name{
+    font-size:8.5px;
+    padding:2px 6px;
+    margin-top:-2px;
+    letter-spacing:.015em;
+  }
+  .room-header{
+    color:#746b5a;
+  }
+  .room-header span{
+    color:#7f7562;
+  }
+  .room-header small{
+    color:#564d3e;
+  }
+  #terminal-hint{
+    color:#6e6555;
+  }
+  #nav{
+    gap:22px;
+  }
+  .nav-item{
+    font-size:7.5px;
+  }
+}
+
+/* Telas desktop realmente grandes recebem só mais um pequeno ganho,
+   sem transformar os cidadãos em retratos gigantes. */
+@media (min-width:1350px) and (min-height:720px){
+  .character-art-wrap{
+    width:78px;
+    height:106px;
+  }
+  .citizen{
+    min-width:88px;
+    min-height:116px;
+  }
+  .citizen-name{
+    font-size:9px;
+  }
+}
+
+/* Mantém a área de toque confortável em qualquer tamanho. */
+.citizen{
+  cursor:pointer;
+}
+.citizen:focus-visible{
+  outline:1px solid rgba(232,163,61,.48);
+  outline-offset:4px;
+}
