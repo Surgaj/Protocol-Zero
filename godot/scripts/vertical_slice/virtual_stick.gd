@@ -1,10 +1,10 @@
 extends Control
 
 # PROTOCOL ZERO — controle virtual de greybox.
-# Visual circular simples para evitar o quadrado/artefato do primeiro teste mobile.
+# Mobile-first: resposta analógica suave, deadzone radial e conversão robusta de coordenadas.
 
-@export var max_radius: float = 62.0
-@export var input_deadzone: float = 0.12
+@export var max_radius: float = 70.0
+@export var input_deadzone: float = 0.10
 
 var _touch_id: int = -1
 var _mouse_active: bool = false
@@ -26,7 +26,7 @@ func _draw() -> void:
 	var outer_radius := max_radius + 18.0
 	draw_circle(_center, outer_radius, Color(0.08, 0.08, 0.08, 0.24))
 	draw_arc(_center, outer_radius, 0.0, TAU, 64, Color(1, 1, 1, 0.18), 2.0)
-	draw_circle(_center + _knob_offset, 27.0, Color(0.82, 0.82, 0.82, 0.62))
+	draw_circle(_center + _knob_offset, 29.0, Color(0.82, 0.82, 0.82, 0.62))
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
@@ -48,7 +48,7 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		return
 
-	# Mouse também controla o pad para teste desktop da build Web.
+	# Mouse continua disponível para testar a mesma sensação no desktop Web.
 	if event is InputEventMouseButton:
 		var mouse_button := event as InputEventMouseButton
 		if mouse_button.button_index == MOUSE_BUTTON_LEFT:
@@ -71,18 +71,23 @@ func _exit_tree() -> void:
 	_release_actions()
 
 func _update_from_global(global_pos: Vector2) -> void:
-	var local_pos := global_pos - global_position
-	var offset := local_pos - _center
+	# Usa a transformação completa do CanvasItem. Isso evita desvio do knob quando o
+	# viewport Web/mobile é escalado para outra resolução física.
+	var local_pos: Vector2 = get_global_transform_with_canvas().affine_inverse() * global_pos
+	var offset: Vector2 = local_pos - _center
 	if offset.length() > max_radius:
 		offset = offset.normalized() * max_radius
-	var vector := offset / max_radius
-	_set_vector(vector)
+	_set_vector(offset / max_radius)
 
-func _set_vector(vector: Vector2) -> void:
+func _set_vector(raw_vector: Vector2) -> void:
 	_release_actions()
 
-	if vector.length() < input_deadzone:
-		vector = Vector2.ZERO
+	var magnitude: float = clampf(raw_vector.length(), 0.0, 1.0)
+	var vector := Vector2.ZERO
+	if magnitude > input_deadzone:
+		# Remove o salto na borda da deadzone: 10% físico vira 0% lógico e cresce suave até 100%.
+		var adjusted_magnitude: float = (magnitude - input_deadzone) / (1.0 - input_deadzone)
+		vector = raw_vector.normalized() * adjusted_magnitude
 
 	if vector.x < 0.0:
 		Input.action_press("move_left", abs(vector.x))
@@ -94,7 +99,7 @@ func _set_vector(vector: Vector2) -> void:
 	elif vector.y > 0.0:
 		Input.action_press("move_back", vector.y)
 
-	_knob_offset = vector * max_radius
+	_knob_offset = raw_vector.limit_length(1.0) * max_radius
 	queue_redraw()
 
 func _release_actions() -> void:
