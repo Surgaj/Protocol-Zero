@@ -31,7 +31,11 @@ func _instantiate_scene(path: String) -> Node:
 	return scene
 
 func _run() -> void:
-	GameState.reset_new_game()
+	var game_state: Node = root.get_node_or_null("GameState")
+	if game_state == null:
+		_fail("autoload GameState ausente")
+		return
+	game_state.call("reset_new_game")
 
 	# CENA 1 — rádio: comportamento, não só existência de nós.
 	var scene1: Node = _instantiate_scene("res://scenes/vertical_slice/scene_01_greybox.tscn")
@@ -82,7 +86,7 @@ func _run() -> void:
 	await process_frame
 
 	# CENA 2 -> CENA 3, caminho tenso: escolha vira relação + memória e comportamento.
-	GameState.reset_new_game()
+	game_state.call("reset_new_game")
 	var scene2_signal: Node = _instantiate_scene("res://scenes/vertical_slice/scene_02_maya.tscn")
 	if scene2_signal == null:
 		_fail("não foi possível carregar scene_02_maya.tscn")
@@ -93,8 +97,8 @@ func _run() -> void:
 		_fail("Cena 2 não construiu Maya/UI de escolha")
 		return
 	scene2_signal.call("apply_choice_for_test", "signal")
-	var tense_rel: Dictionary = GameState.get_relation("maya", "elias")
-	var tense_memories: Array = GameState.get_memories("maya")
+	var tense_rel: Dictionary = game_state.call("get_relation", "maya", "elias") as Dictionary
+	var tense_memories: Array = game_state.call("get_memories", "maya") as Array
 	if float(tense_rel["tension"]) <= 0.20 or tense_memories.size() != 1:
 		_fail("escolha de priorizar sinal não persistiu relação/memória")
 		return
@@ -118,7 +122,7 @@ func _run() -> void:
 	await process_frame
 
 	# Caminho cooperativo: mesmos sistemas, parâmetros espaciais diferentes.
-	GameState.reset_new_game()
+	game_state.call("reset_new_game")
 	var scene2_coop: Node = _instantiate_scene("res://scenes/vertical_slice/scene_02_maya.tscn")
 	if scene2_coop == null:
 		_fail("Cena 2 cooperativa não carregou")
@@ -126,7 +130,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	scene2_coop.call("apply_choice_for_test", "generator")
-	var coop_rel: Dictionary = GameState.get_relation("maya", "elias")
+	var coop_rel: Dictionary = game_state.call("get_relation", "maya", "elias") as Dictionary
 	if float(coop_rel["trust"]) <= 0.15:
 		_fail("escolha de proteger gerador não aumentou confiança")
 		return
