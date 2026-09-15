@@ -18,6 +18,7 @@ var signal_label: Label
 var scene_signal_locked: bool = false
 
 func _ready() -> void:
+	GameState.ensure_new_run()
 	build_environment()
 	build_room()
 	player = build_player()
@@ -133,7 +134,6 @@ func build_camera(target_player: CharacterBody3D) -> Camera3D:
 	camera.keep_aspect = Camera3D.KEEP_WIDTH
 	camera.size = 9.4
 
-	# Ângulo aprovado no Milestone 0.1: congelado enquanto construímos interação.
 	var offset := Vector3(8.5, 6.0, 10.0)
 	camera.set("camera_offset", offset)
 	camera.set("follow_min", Vector2(-0.65, -2.8))
@@ -150,7 +150,6 @@ func build_radio() -> Node3D:
 	radio_root.position = Vector3(-2.45, 0.0, -1.35)
 	radio_root.set_script(load("res://scripts/vertical_slice/radio.gd"))
 
-	# Greybox funcional: caixa/base + corpo do rádio + antena. Sem asset final.
 	add_static_box("RadioCrate", Vector3(1.15, 0.65, 0.78), Vector3(0, 0.325, 0), Color("555555"), radio_root)
 	add_static_box("RadioBody", Vector3(0.88, 0.48, 0.48), Vector3(0, 0.88, 0), Color("7b7b72"), radio_root)
 	add_static_box("RadioAntenna", Vector3(0.045, 0.95, 0.045), Vector3(0.34, 1.50, 0), Color("9b9b94"), radio_root)
@@ -305,7 +304,6 @@ func _on_radio_interact_pressed() -> void:
 	status_label.text = "Arraste o dial. Ouça a estática mudar conforme o sinal se aproxima."
 
 func _on_radio_tuning_started() -> void:
-	# Mantido separado para futura animação/feedback do rádio.
 	pass
 
 func _on_dial_frequency_changed(value: float) -> void:
@@ -339,6 +337,6 @@ func _on_exit_crossed(body: Node3D) -> void:
 	if body.name != "Elias_GreyCapsule":
 		return
 	if scene_signal_locked:
-		status_label.text = "CZI-07 localizado. Próximo: encontro com Maya."
+		get_tree().change_scene_to_file("res://scenes/vertical_slice/scene_02_maya.tscn")
 	else:
 		status_label.text = "Sem coordenadas. Volte e sintonize o rádio antes de seguir."
