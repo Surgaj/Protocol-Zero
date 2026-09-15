@@ -14,6 +14,7 @@ signal signal_locked(frequency: float)
 @export var tolerance: float = 0.5
 @export var lock_duration: float = 0.6
 @export var discovery_band: float = 8.0
+@export var interaction_radius: float = 2.35
 
 var current_frequency: float = 126.0
 var player_near: bool = false
@@ -21,6 +22,7 @@ var tuning: bool = false
 var locked: bool = false
 var lock_timer: float = 0.0
 
+var _player: CharacterBody3D
 var _audio: AudioStreamPlayer3D
 var _playback: AudioStreamGeneratorPlayback
 var _generator: AudioStreamGenerator
@@ -35,9 +37,20 @@ func _ready() -> void:
 	var proximity := get_node_or_null("Proximity") as Area3D
 	_audio = get_node_or_null("StaticAudio") as AudioStreamPlayer3D
 
+	# O Area3D continua existindo, mas não é mais a única fonte de verdade.
+	# Em Web/mobile tivemos um caso real em que o prompt não apareceu apesar de
+	# Elias estar visualmente ao lado do rádio. O fallback por distância abaixo
+	# torna a interação determinística e independente de um evento perdido.
 	if proximity != null:
+		proximity.monitoring = true
+		proximity.monitorable = true
+		proximity.collision_layer = 1
+		proximity.collision_mask = 1
 		proximity.body_entered.connect(_on_body_entered)
 		proximity.body_exited.connect(_on_body_exited)
+
+	if get_parent() != null:
+		_player = get_parent().get_node_or_null("Elias_GreyCapsule") as CharacterBody3D
 
 	if _audio != null:
 		_generator = AudioStreamGenerator.new()
@@ -49,13 +62,18 @@ func _ready() -> void:
 		_audio.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
 
 	set_process(true)
+	call_deferred("_refresh_player_proximity")
 
 func _process(delta: float) -> void:
+	_refresh_player_proximity()
+
 	if tuning and not locked:
 		_update_lock(delta)
 		_fill_audio_buffer()
 
 func begin_tuning() -> bool:
+	# Recalcula no instante do toque para não depender de um sinal físico anterior.
+	_refresh_player_proximity()
 	if locked or not player_near:
 		return false
 
@@ -84,6 +102,37 @@ func stop_tuning() -> void:
 	if _audio != null:
 		_audio.stop()
 	_playback = null
+
+func _refresh_player_proximity() -> void:
+	if locked:
+		_set_player_near(false)
+		return
+
+	if _player == null or not is_instance_valid(_player):
+		if get_parent() != null:
+			_player = get_parent().get_node_or_null("Elias_GreyCapsule") as CharacterBody3D
+		if _player == null:
+			return
+
+	# Só usamos distância horizontal. Diferenças pequenas de Y não devem impedir
+	# o prompt de aparecer quando o jogador está claramente ao lado do aparelho.
+	var radio_pos := global_position
+	var player_pos := _player.global_position
+	var horizontal_distance := Vector2(
+		player_pos.x - radio_pos.x,
+		player_pos.z - radio_pos.z
+	).length()
+
+	_set_player_near(horizontal_distance <= interaction_radius)
+
+func _set_player_near(value: bool) -> void:
+	if player_near == value:
+		return
+
+	player_near = value
+	if not player_near and tuning and not locked:
+		stop_tuning()
+	proximity_changed.emit(player_near)
 
 func _update_lock(delta: float) -> void:
 	var distance := abs(current_frequency - target_frequency)
@@ -158,13 +207,12 @@ func _fill_audio_buffer() -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if body.name != "Elias_GreyCapsule":
 		return
-	player_near = true
-	proximity_changed.emit(true)
+	_player = body as CharacterBody3D
+	_set_player_near(true)
 
 func _on_body_exited(body: Node3D) -> void:
 	if body.name != "Elias_GreyCapsule":
 		return
-	player_near = false
-	if tuning and not locked:
-		stop_tuning()
-	proximity_changed.emit(false)
+	# Não força false aqui: o cálculo horizontal decide. Isso evita flicker na
+	# borda do Area3D e mantém Area + distância trabalhando como redundância.
+	_refresh_player_proximity()
