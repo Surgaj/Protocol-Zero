@@ -31,6 +31,8 @@ func _physics_process(delta: float) -> void:
 
 	var direction := _camera_relative(input_vec)
 
+	# Mantém a intensidade analógica do joystick. No teclado input_vec já chega em 1.0,
+	# enquanto no touch pequenos deslocamentos agora geram caminhada lenta em vez de full speed.
 	velocity.x = direction.x * move_speed
 	velocity.z = direction.z * move_speed
 
@@ -51,9 +53,12 @@ func _physics_process(delta: float) -> void:
 
 func _camera_relative(input_vec: Vector2) -> Vector3:
 	# Input.get_vector retorna Y negativo para move_forward.
-	# Por isso usamos -input_vec.y para caminhar na direção frontal da câmera.
+	# Não normalizamos o resultado: o comprimento do vetor representa a força do stick.
 	if movement_camera == null:
-		return Vector3(input_vec.x, 0.0, -input_vec.y).normalized()
+		var fallback := Vector3(input_vec.x, 0.0, -input_vec.y)
+		if fallback.length() > 1.0:
+			fallback = fallback.normalized()
+		return fallback
 
 	var cam_forward := -movement_camera.global_transform.basis.z
 	cam_forward.y = 0.0
@@ -63,7 +68,10 @@ func _camera_relative(input_vec: Vector2) -> Vector3:
 	cam_right.y = 0.0
 	cam_right = cam_right.normalized()
 
-	return (
+	var direction := (
 		cam_right * input_vec.x
 		+ cam_forward * -input_vec.y
-	).normalized()
+	)
+	if direction.length() > 1.0:
+		direction = direction.normalized()
+	return direction
