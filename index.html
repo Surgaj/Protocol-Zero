@@ -6,40 +6,175 @@
   <meta name="theme-color" content="#080704" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>PROTOCOL ZERO — CZI-07 · Character Integration V0.4</title>
+  <title>PROTOCOL ZERO — CZI-07 · Character Fit V0.4.1</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="assets/app.css" />
+  <link rel="stylesheet" href="assets/v041.css?v=041" />
 </head>
 <body>
 <main id="stage" aria-label="CZI-07 — Dia 0">
   <div id="dust" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
   <div class="vignette" aria-hidden="true"></div>
+
   <header id="hud-top">
     <section id="resources" aria-label="Recursos">
-      <button class="resource" id="res-food" type="button"><span class="icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h16l-2 7H6l-2-7z" fill="currentColor"/><path d="M7 8h10M9 5.5c0 1 1 1.2 1 2.1M13 5c0 1 1 1.2 1 2.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><span class="resource-value">29</span></button>
-      <button class="resource" id="res-water" type="button"><span class="icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.4 7 5 10.6 5 15a7 7 0 0 0 14 0c0-4.4-3.4-8-7-13z" fill="currentColor"/></svg></span><span class="resource-value">26</span></button>
-      <button class="resource" id="res-material" type="button"><span class="icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h16v4H4zM10 4h4v16h-4z" fill="currentColor"/><circle cx="12" cy="12" r="3.1" fill="#080704"/></svg></span><span class="resource-value">10</span></button>
-      <button class="resource danger" id="res-energy" type="button"><span class="icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 5 13h6l-1 9 9-13h-6l0-7z" fill="currentColor"/></svg></span><span class="resource-value">19</span></button>
+      <button class="resource" id="res-food" type="button">
+        <span class="icon-wrap">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 10h16l-2 7H6l-2-7z" fill="currentColor"/>
+            <path d="M7 8h10M9 5.5c0 1 1 1.2 1 2.1M13 5c0 1 1 1.2 1 2.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="resource-value">29</span>
+      </button>
+      <button class="resource" id="res-water" type="button">
+        <span class="icon-wrap">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.4 7 5 10.6 5 15a7 7 0 0 0 14 0c0-4.4-3.4-8-7-13z" fill="currentColor"/></svg>
+        </span>
+        <span class="resource-value">26</span>
+      </button>
+      <button class="resource" id="res-material" type="button">
+        <span class="icon-wrap">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h16v4H4zM10 4h4v16h-4z" fill="currentColor"/><circle cx="12" cy="12" r="3.1" fill="#080704"/></svg>
+        </span>
+        <span class="resource-value">10</span>
+      </button>
+      <button class="resource danger" id="res-energy" type="button">
+        <span class="icon-wrap">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 5 13h6l-1 9 9-13h-6l0-7z" fill="currentColor"/></svg>
+        </span>
+        <span class="resource-value">19</span>
+      </button>
     </section>
-    <section class="sector-ident"><div class="sector-copy"><span>CZI-07</span><i>/</i><b>SETOR A</b></div><button id="signal" type="button" aria-label="Transmissão detectada"><span class="signal-ring"></span><span class="signal-core"></span></button></section>
+
+    <section class="sector-ident">
+      <div class="sector-copy">
+        <span>CZI-07</span><i>/</i><b>SETOR A</b>
+      </div>
+      <button id="signal" type="button" aria-label="Transmissão detectada">
+        <span class="signal-ring"></span>
+        <span class="signal-core"></span>
+      </button>
+    </section>
   </header>
-  <section id="directive" aria-label="Diretiva atual"><span class="directive-tag">DIRETIVA</span><span class="directive-main">RESTABELECER ENERGIA</span><span class="directive-sep">·</span><span class="directive-sub">LOCALIZAR ÁGUA POTÁVEL</span></section>
-  <section id="map" aria-label="Planta da instalação">
-    <div class="map-backplane" aria-hidden="true"><span class="link link-nw"></span><span class="link link-sw"></span><span class="link link-ne"></span><span class="link link-se"></span></div>
-    <article class="room room-dorm room-flicker" id="dormitorio"><div class="rust-streak"></div><div class="rust-pits"></div><div class="room-lamp lamp-warm"></div><div class="door-notch door-right"></div><header class="room-header"><span>DORMITÓRIO</span><small>4 LEITOS / 5 PESSOAS</small></header><div class="dorm-props" aria-hidden="true"><div class="beds"><div class="bed"><i></i><span></span></div><div class="bed"><i></i><span></span></div><div class="bed"><i></i><span></span></div><div class="bed"><i></i><span></span></div></div><div class="floor-kit"><div class="blanket"></div><div class="bag"></div><small>IMPROVISADO</small></div><div class="locker l1"></div><div class="locker l2"></div></div></article>
-    <article class="room room-corridor room-flicker" id="corredor"><div class="rust-streak alt"></div><div class="rust-pits"></div><header class="room-header"><span>CORREDOR</span><small>NÚCLEO CENTRAL</small></header><div class="corridor-floor"><i></i><i></i><i></i><i></i><i></i></div><button id="terminal-hint" type="button"><span class="terminal-led"></span><span>ÁREA NÃO MAPEADA</span></button><div class="door-notch door-left"></div><div class="door-notch door-right"></div><div class="door-notch door-top"></div><div class="door-notch door-bottom"></div></article>
-    <article class="room room-ref room-flicker" id="refeitorio"><div class="rust-streak"></div><div class="rust-pits"></div><div class="room-lamp lamp-dim"></div><div class="door-notch door-left"></div><header class="room-header"><span>REFEITÓRIO</span><small>COZINHA DE CAMPO</small></header><div class="ref-props"><div class="table"></div><div class="bench b1"></div><div class="bench b2"></div><div class="shelf"><i></i><i></i><i></i></div></div></article>
-    <article class="room room-generator room-flicker" id="gerador"><div class="rust-streak alt"></div><div class="rust-pits"></div><div class="room-lamp lamp-red"></div><div class="door-notch door-right"></div><header class="room-header"><span>GERADOR</span><small>AUX-02 · INSTÁVEL</small></header><div class="generator-machine"><div class="gen-shell"><div class="coil c1"></div><div class="coil c2"></div><div class="coil c3"></div><div class="gen-core"></div></div><div class="power-bar"><i></i></div><div class="cable cable-a"></div><div class="cable cable-b"></div><div class="sparks"><i></i><i></i><i></i></div></div></article>
-    <article class="room room-sector-b" id="setorb"><div class="rust-pits"></div><div class="door-notch door-left blocked"></div><header class="room-header"><span>SETOR B</span><small>ACESSO RESTRITO</small></header><div class="sector-door"><div class="hazard-stripes"></div><div class="door-seam"></div><div class="door-lock"><span></span></div><div class="warning-light"></div></div><div class="sector-b-copy"><strong>LACRADO</strong><small>ESTRUTURA NÃO VERIFICADA</small></div></article>
+
+  <section id="directive" aria-label="Diretiva atual">
+    <span class="directive-tag">DIRETIVA</span>
+    <span class="directive-main">RESTABELECER ENERGIA</span>
+    <span class="directive-sep">·</span>
+    <span class="directive-sub">LOCALIZAR ÁGUA POTÁVEL</span>
   </section>
-  <aside id="portrait-note" aria-hidden="true"><span>↻</span> Melhor experiência em paisagem</aside><div id="first-prompt">TOQUE EM ALGUÉM</div>
-  <footer id="hud-bottom"><div id="clock"><span>DIA 0</span><b>06:53</b></div><nav id="nav" aria-label="Navegação"><button class="nav-item active" type="button"><i></i><span>CIDADE</span></button><button class="nav-item" type="button"><i></i><span>HERÓIS</span></button><button class="nav-item" type="button"><i></i><span>EXPLORAR</span></button><button class="nav-item" type="button"><i></i><span>MISSÕES</span></button></nav></footer>
+
+  <section id="map" aria-label="Planta da instalação">
+    <div class="map-backplane" aria-hidden="true">
+      <span class="link link-nw"></span>
+      <span class="link link-sw"></span>
+      <span class="link link-ne"></span>
+      <span class="link link-se"></span>
+    </div>
+
+    <article class="room room-dorm room-flicker" id="dormitorio">
+      <div class="rust-streak"></div><div class="rust-pits"></div>
+      <div class="room-lamp lamp-warm"></div>
+      <div class="door-notch door-right"></div>
+      <header class="room-header"><span>DORMITÓRIO</span><small>4 LEITOS / 5 PESSOAS</small></header>
+      <div class="dorm-props" aria-hidden="true">
+        <div class="beds">
+          <div class="bed"><i></i><span></span></div>
+          <div class="bed"><i></i><span></span></div>
+          <div class="bed"><i></i><span></span></div>
+          <div class="bed"><i></i><span></span></div>
+        </div>
+        <div class="floor-kit">
+          <div class="blanket"></div><div class="bag"></div><small>IMPROVISADO</small>
+        </div>
+        <div class="locker l1"></div><div class="locker l2"></div>
+      </div>
+    </article>
+
+    <article class="room room-corridor room-flicker" id="corredor">
+      <div class="rust-streak alt"></div><div class="rust-pits"></div>
+      <header class="room-header"><span>CORREDOR</span><small>NÚCLEO CENTRAL</small></header>
+      <div class="corridor-floor"><i></i><i></i><i></i><i></i><i></i></div>
+      <button id="terminal-hint" type="button"><span class="terminal-led"></span><span>ÁREA NÃO MAPEADA</span></button>
+      <div class="door-notch door-left"></div><div class="door-notch door-right"></div>
+      <div class="door-notch door-top"></div><div class="door-notch door-bottom"></div>
+    </article>
+
+    <article class="room room-ref room-flicker" id="refeitorio">
+      <div class="rust-streak"></div><div class="rust-pits"></div>
+      <div class="room-lamp lamp-dim"></div>
+      <div class="door-notch door-left"></div>
+      <header class="room-header"><span>REFEITÓRIO</span><small>COZINHA DE CAMPO</small></header>
+      <div class="ref-props">
+        <div class="table"></div><div class="bench b1"></div><div class="bench b2"></div>
+        <div class="shelf"><i></i><i></i><i></i></div>
+      </div>
+    </article>
+
+    <article class="room room-generator room-flicker" id="gerador">
+      <div class="rust-streak alt"></div><div class="rust-pits"></div>
+      <div class="room-lamp lamp-red"></div>
+      <div class="door-notch door-right"></div>
+      <header class="room-header"><span>GERADOR</span><small>AUX-02 · INSTÁVEL</small></header>
+      <div class="generator-machine">
+        <div class="gen-shell">
+          <div class="coil c1"></div><div class="coil c2"></div><div class="coil c3"></div><div class="gen-core"></div>
+        </div>
+        <div class="power-bar"><i></i></div>
+        <div class="cable cable-a"></div><div class="cable cable-b"></div>
+        <div class="sparks"><i></i><i></i><i></i></div>
+      </div>
+    </article>
+
+    <article class="room room-sector-b" id="setorb">
+      <div class="rust-pits"></div>
+      <div class="door-notch door-left blocked"></div>
+      <header class="room-header"><span>SETOR B</span><small>ACESSO RESTRITO</small></header>
+      <div class="sector-door">
+        <div class="hazard-stripes"></div><div class="door-seam"></div>
+        <div class="door-lock"><span></span></div><div class="warning-light"></div>
+      </div>
+      <div class="sector-b-copy"><strong>LACRADO</strong><small>ESTRUTURA NÃO VERIFICADA</small></div>
+    </article>
+  </section>
+
+  <aside id="portrait-note" aria-hidden="true"><span>↻</span> Melhor experiência em paisagem</aside>
+  <div id="first-prompt">TOQUE EM ALGUÉM</div>
+
+  <footer id="hud-bottom">
+    <div id="clock"><span>DIA 0</span><b>06:53</b></div>
+    <nav id="nav" aria-label="Navegação">
+      <button class="nav-item active" type="button"><i></i><span>CIDADE</span></button>
+      <button class="nav-item" type="button"><i></i><span>HERÓIS</span></button>
+      <button class="nav-item" type="button"><i></i><span>EXPLORAR</span></button>
+      <button class="nav-item" type="button"><i></i><span>MISSÕES</span></button>
+    </nav>
+  </footer>
+
   <div id="scrim"></div>
-  <section id="sheet" aria-live="polite" aria-label="Detalhes"><button id="sheet-close" type="button">FECHAR ✕</button><div class="sheet-eyebrow" id="sheet-eyebrow">OBSERVAÇÃO</div><div class="sheet-head"><h2 id="sheet-name">—</h2><span id="sheet-role">—</span></div><div class="sheet-grid"><div class="sheet-portrait" id="sheet-portrait" aria-hidden="true"><img id="sheet-character-art" alt="" /></div><div><p id="sheet-status">—</p><div class="sheet-meta"><span id="sheet-room">—</span><span id="sheet-activity">—</span></div></div></div></section>
+
+  <section id="sheet" aria-live="polite" aria-label="Detalhes">
+    <button id="sheet-close" type="button">FECHAR ✕</button>
+    <div class="sheet-eyebrow" id="sheet-eyebrow">OBSERVAÇÃO</div>
+    <div class="sheet-head"><h2 id="sheet-name">—</h2><span id="sheet-role">—</span></div>
+    <div class="sheet-grid">
+      <div class="sheet-portrait" id="sheet-portrait" aria-hidden="true">
+        <img id="sheet-character-art" alt="" />
+      </div>
+      <div>
+        <p id="sheet-status">—</p>
+        <div class="sheet-meta"><span id="sheet-room">—</span><span id="sheet-activity">—</span></div>
+      </div>
+    </div>
+  </section>
 </main>
+
 <script src="assets/app.js"></script>
 </body>
 </html>
