@@ -5,12 +5,15 @@ extends Node3D
 
 var objective_label: Label
 var status_label: Label
+var player: CharacterBody3D
+var gameplay_camera: Camera3D
 
 func _ready() -> void:
 	build_environment()
 	build_room()
-	build_player()
-	build_camera()
+	player = build_player()
+	gameplay_camera = build_camera(player)
+	player.call("set_movement_camera", gameplay_camera)
 	build_ui()
 	build_exit_trigger()
 
@@ -81,12 +84,12 @@ func build_room() -> void:
 	add_static_box("ExitWallLeft", Vector3(0.4, 3.0, 5.0), Vector3(-2.05, 1.5, -12.25), Color("5f5f5f"))
 	add_static_box("ExitWallRight", Vector3(0.4, 3.0, 5.0), Vector3(2.05, 1.5, -12.25), Color("5f5f5f"))
 
-func build_player() -> void:
-	var player := CharacterBody3D.new()
-	player.name = "Elias_GreyCapsule"
-	player.position = Vector3(0, 1.15, 6.25)
-	player.set_script(load("res://scripts/vertical_slice/player_capsule.gd"))
-	add_child(player)
+func build_player() -> CharacterBody3D:
+	var new_player := CharacterBody3D.new()
+	new_player.name = "Elias_GreyCapsule"
+	new_player.position = Vector3(0, 1.15, 6.25)
+	new_player.set_script(load("res://scripts/vertical_slice/player_capsule.gd"))
+	add_child(new_player)
 
 	var mesh_instance := MeshInstance3D.new()
 	var mesh := CapsuleMesh.new()
@@ -94,24 +97,30 @@ func build_player() -> void:
 	mesh.height = 2.2
 	mesh.material = make_material(Color("b7b7b7"), 0.95)
 	mesh_instance.mesh = mesh
-	player.add_child(mesh_instance)
+	new_player.add_child(mesh_instance)
 
 	var collision := CollisionShape3D.new()
 	var capsule := CapsuleShape3D.new()
 	capsule.radius = 0.48
 	capsule.height = 2.2
 	collision.shape = capsule
-	player.add_child(collision)
+	new_player.add_child(collision)
+	return new_player
 
-func build_camera() -> void:
+func build_camera(target_player: CharacterBody3D) -> Camera3D:
 	var camera := Camera3D.new()
 	camera.name = "GreyboxCamera"
-	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = 22.0
-	camera.position = Vector3(14.5, 17.5, 18.5)
-	camera.look_at_from_position(camera.position, Vector3(0, 0.7, -1.6), Vector3.UP)
-	camera.current = true
+	camera.set_script(load("res://scripts/vertical_slice/camera_follow.gd"))
 	add_child(camera)
+
+	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	# Retrato 9:16: size 26 mantém a largura de 14 m da sala legível.
+	camera.size = 26.0
+	camera.global_position = target_player.global_position + Vector3(14.5, 17.5, 18.5)
+	camera.look_at(target_player.global_position + Vector3(0, 0.7, 0), Vector3.UP)
+	camera.current = true
+	camera.call("set_target", target_player)
+	return camera
 
 func build_ui() -> void:
 	var layer := CanvasLayer.new()
@@ -120,7 +129,7 @@ func build_ui() -> void:
 
 	var panel := ColorRect.new()
 	panel.position = Vector2(24, 22)
-	panel.size = Vector2(475, 92)
+	panel.size = Vector2(620, 92)
 	panel.color = Color(0.04, 0.04, 0.04, 0.78)
 	layer.add_child(panel)
 
