@@ -69,11 +69,12 @@ func _gui_input(event: InputEvent) -> void:
 	if locked:
 		return
 
+	# Em _gui_input, position já chega no espaço local do Control.
 	if event is InputEventScreenTouch:
 		var touch := event as InputEventScreenTouch
 		if touch.pressed and _touch_id == -1:
 			_touch_id = touch.index
-			_update_from_local_x(to_local(touch.position).x)
+			_update_from_local_x(touch.position.x)
 			accept_event()
 		elif not touch.pressed and touch.index == _touch_id:
 			_touch_id = -1
@@ -83,7 +84,7 @@ func _gui_input(event: InputEvent) -> void:
 	if event is InputEventScreenDrag:
 		var drag := event as InputEventScreenDrag
 		if drag.index == _touch_id:
-			_update_from_local_x(to_local(drag.position).x)
+			_update_from_local_x(drag.position.x)
 			accept_event()
 		return
 
