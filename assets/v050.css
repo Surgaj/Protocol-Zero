@@ -1,0 +1,76 @@
+/* PROTOCOL ZERO — CZI-07 · Environment Dressing V0.5
+   Direção: stylized semi-realistic mobile survival.
+   Objetivo: salas legíveis pela função mesmo sem texto. */
+
+.room{isolation:isolate}
+.room::before{pointer-events:none}
+.room-floor-depth{position:absolute;z-index:1;left:0;right:0;bottom:0;height:34%;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(0,0,0,.1)),repeating-linear-gradient(90deg,rgba(233,226,210,.025) 0 1px,transparent 1px 38px);border-top:1px solid rgba(233,226,210,.035);transform-origin:50% 100%}
+.room-dressing{position:absolute;z-index:4;inset:40px 10px 10px;pointer-events:none}
+.prop-metal{background:linear-gradient(180deg,rgba(126,111,84,.16),rgba(17,15,11,.7));border:1px solid rgba(233,226,210,.09);box-shadow:inset 0 1px rgba(255,255,255,.025),0 5px 12px rgba(0,0,0,.22)}
+.prop-rust{border-color:rgba(181,80,42,.25)!important;box-shadow:inset 0 0 14px rgba(181,80,42,.06),0 5px 12px rgba(0,0,0,.24)}
+.prop-led{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--teal);box-shadow:0 0 7px rgba(95,209,192,.7);animation:propBlink 3.2s ease-in-out infinite}
+@keyframes propBlink{0%,100%{opacity:.35}50%{opacity:1}}
+
+/* ==================== DORMITÓRIO ==================== */
+.room-dorm{background:radial-gradient(ellipse at 56% 70%,rgba(232,163,61,.055),transparent 48%),linear-gradient(180deg,rgba(255,255,255,.02),transparent 38%),var(--panel)}
+.dorm-pipe{position:absolute;left:4%;right:6%;top:8%;height:6px;border-top:2px solid rgba(118,104,82,.22);border-bottom:1px solid rgba(0,0,0,.6)}
+.dorm-pipe::before,.dorm-pipe::after{content:"";position:absolute;top:-3px;width:7px;height:9px;border:1px solid rgba(118,104,82,.24);background:#121009}.dorm-pipe::before{left:20%}.dorm-pipe::after{right:22%}
+.dorm-wall-shelf{position:absolute;right:5%;top:15%;width:24%;height:16%;border-bottom:4px solid rgba(119,102,75,.18)}
+.dorm-wall-shelf i{position:absolute;bottom:4px;width:18%;height:48%;background:rgba(109,92,67,.17);border:1px solid rgba(233,226,210,.06)}
+.dorm-wall-shelf i:nth-child(1){left:4%;height:38%}.dorm-wall-shelf i:nth-child(2){left:29%}.dorm-wall-shelf i:nth-child(3){left:54%;height:30%}.dorm-wall-shelf i:nth-child(4){right:2%;height:57%;background:rgba(181,80,42,.14)}
+.dorm-crate{position:absolute;bottom:8%;width:15%;height:18%;border-radius:2px}.dorm-crate.c1{left:5%}.dorm-crate.c2{left:21%;bottom:6%;width:12%;height:13%}.dorm-crate::before{content:"";position:absolute;left:5px;right:5px;top:50%;height:1px;background:rgba(233,226,210,.08)}
+.dorm-hanging{position:absolute;left:40%;top:5%;width:11%;height:24%;border-left:1px solid rgba(233,226,210,.07)}.dorm-hanging::after{content:"";position:absolute;left:-5px;bottom:0;width:13px;height:19px;border-radius:7px 7px 4px 4px;background:rgba(86,74,57,.2);border:1px solid rgba(233,226,210,.06)}
+.dorm-lamp-prop{position:absolute;left:60%;top:1%;width:30px;height:6px;background:rgba(231,178,86,.18);box-shadow:0 7px 20px rgba(232,163,61,.12)}
+
+/* ==================== CORREDOR ==================== */
+.room-corridor{background:radial-gradient(ellipse at 50% 48%,rgba(95,209,192,.025),transparent 45%),linear-gradient(90deg,rgba(255,255,255,.012),transparent 18% 82%,rgba(255,255,255,.012)),var(--panel)}
+.corr-overhead{position:absolute;left:7%;right:7%;top:7%;height:18px;border-top:3px solid rgba(107,92,69,.18);border-bottom:1px solid rgba(233,226,210,.04)}
+.corr-overhead::before{content:"";position:absolute;left:11%;right:18%;top:6px;height:2px;background:rgba(181,80,42,.16);box-shadow:0 5px 0 rgba(80,72,59,.18)}
+.corr-panel{position:absolute;width:21%;height:22%;top:19%;border-radius:2px}.corr-panel.p1{left:5%}.corr-panel.p2{right:5%;top:54%}.corr-panel::before{content:"";position:absolute;left:7px;right:7px;top:8px;height:3px;background:rgba(95,209,192,.17);box-shadow:0 8px 0 rgba(232,163,61,.09),0 16px 0 rgba(233,226,210,.045)}
+.corr-cabletray{position:absolute;left:7%;right:7%;bottom:10%;height:9px;border-top:1px solid rgba(233,226,210,.08);border-bottom:2px solid rgba(71,62,49,.2)}
+.corr-cabletray::before{content:"";position:absolute;left:5%;right:38%;top:3px;height:2px;background:rgba(181,80,42,.18)}
+.corr-grate{position:absolute;left:31%;right:31%;top:18%;bottom:15%;opacity:.24;background:repeating-linear-gradient(90deg,rgba(233,226,210,.12) 0 1px,transparent 1px 14px),repeating-linear-gradient(180deg,rgba(233,226,210,.08) 0 1px,transparent 1px 20px);border:1px solid rgba(233,226,210,.05)}
+.corr-column{position:absolute;left:46%;top:15%;bottom:15%;width:8%;border-left:1px solid rgba(233,226,210,.04);border-right:1px solid rgba(233,226,210,.04);background:linear-gradient(90deg,rgba(0,0,0,.2),rgba(255,255,255,.018),rgba(0,0,0,.18));opacity:.5}
+
+/* ==================== REFEITÓRIO ==================== */
+.room-ref{background:radial-gradient(ellipse at 45% 72%,rgba(218,151,67,.07),transparent 46%),linear-gradient(180deg,rgba(255,255,255,.02),transparent 36%),var(--panel)}
+.ref-counter{position:absolute;left:4%;right:4%;top:13%;height:18%;border-radius:2px}.ref-counter::before{content:"";position:absolute;left:8%;width:22%;bottom:5px;height:7px;border:1px solid rgba(233,226,210,.08);background:rgba(0,0,0,.16)}.ref-counter::after{content:"";position:absolute;right:8%;bottom:5px;width:28%;height:6px;background:repeating-linear-gradient(90deg,rgba(233,226,210,.07) 0 2px,transparent 2px 7px)}
+.ref-stove{position:absolute;left:7%;top:34%;width:23%;height:25%;border-radius:2px}.ref-stove i{position:absolute;top:7px;width:10px;height:10px;border:1px solid rgba(233,226,210,.1);border-radius:50%}.ref-stove i:nth-child(1){left:7px}.ref-stove i:nth-child(2){right:7px}.ref-stove::after{content:"";position:absolute;left:7px;right:7px;bottom:7px;height:30%;border-top:1px solid rgba(233,226,210,.06)}
+.ref-pantry{position:absolute;right:5%;top:34%;width:19%;height:48%;border-radius:2px}.ref-pantry::before,.ref-pantry::after{content:"";position:absolute;left:5px;right:5px;height:1px;background:rgba(233,226,210,.07)}.ref-pantry::before{top:33%}.ref-pantry::after{top:66%}
+.ref-barrel{position:absolute;right:28%;bottom:8%;width:13%;height:24%;border-radius:50% 50% 12% 12%/12% 12% 8% 8%;background:linear-gradient(90deg,rgba(61,75,72,.3),rgba(95,209,192,.08),rgba(31,38,36,.35));border:1px solid rgba(95,209,192,.12)}
+.ref-barrel::before{content:"";position:absolute;left:4px;right:4px;top:28%;height:1px;background:rgba(233,226,210,.07);box-shadow:0 16px 0 rgba(233,226,210,.05)}
+.ref-utensils{position:absolute;left:36%;top:13%;width:23%;height:17%;display:flex;gap:4px;align-items:flex-end}.ref-utensils i{width:3px;height:62%;border-radius:2px;background:rgba(151,130,94,.18)}.ref-utensils i:nth-child(2){height:80%}.ref-utensils i:nth-child(3){height:48%}.ref-utensils i:nth-child(4){height:70%}
+.ref-table-clutter{position:absolute;left:35%;right:33%;top:43%;height:13px}.ref-table-clutter i{position:absolute;bottom:0;width:12px;height:5px;border:1px solid rgba(233,226,210,.08);background:rgba(232,163,61,.05)}.ref-table-clutter i:nth-child(1){left:5%}.ref-table-clutter i:nth-child(2){left:42%;width:7px;height:8px}.ref-table-clutter i:nth-child(3){right:5%;width:14px}
+
+/* ==================== GERADOR ==================== */
+.room-generator{background:radial-gradient(ellipse at 60% 62%,rgba(201,67,58,.09),transparent 48%),linear-gradient(180deg,rgba(255,255,255,.017),transparent 36%),var(--panel)}
+.gen-pipe-main{position:absolute;left:5%;right:4%;top:8%;height:10px;border-top:4px solid rgba(116,94,70,.22);border-bottom:1px solid rgba(0,0,0,.7)}.gen-pipe-main::after{content:"";position:absolute;right:12%;top:-2px;width:18%;height:22px;border-right:4px solid rgba(116,94,70,.2);border-bottom:4px solid rgba(116,94,70,.2);border-radius:0 0 5px 0}
+.gen-tanks{position:absolute;left:4%;bottom:7%;display:flex;gap:7px;height:35%;width:32%}.gen-tanks i{flex:1;border-radius:10px 10px 4px 4px;background:linear-gradient(90deg,rgba(56,50,40,.7),rgba(126,103,73,.16),rgba(38,34,28,.8));border:1px solid rgba(233,226,210,.07);position:relative}.gen-tanks i::before{content:"";position:absolute;left:3px;right:3px;top:25%;height:1px;background:rgba(233,226,210,.07);box-shadow:0 19px 0 rgba(233,226,210,.05)}
+.gen-battery{position:absolute;right:4%;bottom:8%;width:24%;height:28%;display:grid;grid-template-columns:repeat(3,1fr);gap:3px}.gen-battery i{background:linear-gradient(180deg,rgba(95,209,192,.08),rgba(0,0,0,.25));border:1px solid rgba(95,209,192,.10)}
+.gen-toolcart{position:absolute;right:7%;top:24%;width:22%;height:22%;border-radius:2px}.gen-toolcart::before{content:"";position:absolute;left:5px;right:5px;top:32%;height:1px;background:rgba(233,226,210,.07);box-shadow:0 12px 0 rgba(233,226,210,.05)}.gen-toolcart::after{content:"";position:absolute;left:5px;bottom:-4px;width:5px;height:5px;border-radius:50%;background:#0b0906;box-shadow:44px 0 0 #0b0906}
+.gen-steam{position:absolute;right:34%;top:10%;width:24px;height:34px;opacity:.24}.gen-steam i{position:absolute;bottom:0;width:8px;height:25px;border-radius:50%;border-left:2px solid rgba(233,226,210,.18);filter:blur(1px);animation:steam 3.2s ease-in-out infinite}.gen-steam i:nth-child(2){left:8px;animation-delay:-1.1s}.gen-steam i:nth-child(3){left:15px;animation-delay:-2s}@keyframes steam{0%{transform:translateY(8px) scale(.7);opacity:0}45%{opacity:.5}100%{transform:translateY(-10px) scale(1.2);opacity:0}}
+
+/* ==================== SETOR B ==================== */
+.room-sector-b{background:radial-gradient(ellipse at 51% 51%,rgba(201,67,58,.055),transparent 42%),repeating-linear-gradient(135deg,rgba(0,0,0,.42) 0 12px,rgba(181,80,42,.022) 12px 24px),#0b0906}
+.sector-camera{position:absolute;right:8%;top:10%;width:26px;height:13px;border:1px solid rgba(233,226,210,.07);background:#11100c;transform:rotate(-8deg)}.sector-camera::before{content:"";position:absolute;right:3px;top:3px;width:5px;height:5px;border-radius:50%;background:rgba(201,67,58,.55);box-shadow:0 0 8px rgba(201,67,58,.6)}.sector-camera::after{content:"";position:absolute;left:4px;bottom:-9px;width:2px;height:10px;background:rgba(233,226,210,.08);transform:rotate(20deg)}
+.sector-broken-panel{position:absolute;left:7%;top:18%;width:19%;height:27%;border:1px solid rgba(181,80,42,.19);background:rgba(0,0,0,.27)}.sector-broken-panel::before{content:"";position:absolute;left:5px;right:5px;top:7px;height:2px;background:rgba(201,67,58,.23);box-shadow:0 8px 0 rgba(233,226,210,.04),0 16px 0 rgba(233,226,210,.025)}.sector-broken-panel::after{content:"";position:absolute;right:-8px;bottom:-15px;width:1px;height:22px;background:rgba(181,80,42,.3);transform:rotate(-22deg);box-shadow:5px 2px 0 rgba(181,80,42,.16)}
+.sector-vent{position:absolute;right:7%;bottom:9%;width:24%;height:18%;border:1px solid rgba(233,226,210,.045);background:repeating-linear-gradient(180deg,rgba(233,226,210,.055) 0 1px,transparent 1px 6px)}
+.sector-scorch{position:absolute;left:31%;right:28%;bottom:7%;height:18%;background:radial-gradient(ellipse at 50% 100%,rgba(0,0,0,.8),transparent 68%);opacity:.7}
+.sector-warning-strip{position:absolute;left:6%;right:6%;bottom:4%;height:7px;opacity:.25;background:repeating-linear-gradient(135deg,var(--rust) 0 8px,#090704 8px 16px)}
+
+/* Mais volume arquitetônico: moldura interna e luz localizada. */
+.room{box-shadow:inset 0 1px rgba(255,255,255,.018),inset 0 -16px 24px rgba(0,0,0,.18),inset 12px 0 18px rgba(0,0,0,.07),inset -12px 0 18px rgba(0,0,0,.07),0 8px 30px rgba(0,0,0,.14)}
+.room-header{background:linear-gradient(180deg,rgba(8,7,4,.36),transparent);text-shadow:0 1px 3px rgba(0,0,0,.8)}
+
+/* No desktop, os props ganham um pouco mais de presença. */
+@media(min-width:900px) and (min-height:640px){
+  .room-dressing{inset:44px 13px 12px}
+  .room-floor-depth{height:38%}
+  .prop-metal{border-color:rgba(233,226,210,.11)}
+}
+
+/* Landscape muito baixo: preserva personagem e leitura, reduz microprops. */
+@media(orientation:landscape) and (max-height:480px){
+  .dorm-wall-shelf,.dorm-hanging,.ref-utensils,.ref-table-clutter,.gen-steam,.sector-vent{opacity:.45}
+  .room-dressing{inset:33px 8px 7px}
+}
