@@ -1,0 +1,83 @@
+/* PROTOCOL ZERO — CZI-07 · Character Fit V0.4.1
+   Ajustes de encaixe dos personagens + HUD inferior no iPhone. */
+
+:root{
+  --safe-left:max(env(safe-area-inset-left),0px);
+  --safe-right:max(env(safe-area-inset-right),0px);
+}
+
+/* Usa a viewport pequena/visível do navegador móvel, evitando que o rodapé
+   fique atrás da interface do Safari/GitHub in-app browser. */
+#stage{
+  height:100svh;
+  min-height:0;
+}
+
+/* O footer da V0.4 estava no fluxo normal do documento. Agora fica preso
+   dentro do stage e a planta já reserva 62px para ele. */
+#hud-bottom{
+  position:absolute;
+  z-index:50;
+  left:0;
+  right:0;
+  bottom:0;
+  min-height:58px;
+  padding:8px max(24px,var(--safe-right)) max(9px,var(--safe-bottom)) max(24px,var(--safe-left));
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  background:linear-gradient(0deg,rgba(8,7,4,.99),rgba(8,7,4,.82),rgba(8,7,4,.18));
+  border-top:1px solid rgba(232,163,61,.055);
+}
+
+#first-prompt{bottom:68px}
+
+/* Character fit: em landscape a âncora fica mais baixa e a arte um pouco
+   menor. Isso impede Dante/Iris/Maya de atravessarem o teto das salas
+   mesmo quando o wander chega ao limite superior. */
+@media(orientation:landscape){
+  .citizen{
+    transform:translate(-50%,-45%);
+    min-width:62px;
+    min-height:82px;
+  }
+  .character-art-wrap{
+    width:58px;
+    height:78px;
+  }
+  .character-shadow{bottom:13px;width:38px}
+  .citizen-name{font-size:7px;margin-top:-3px}
+}
+
+@media(orientation:landscape) and (max-height:620px){
+  #hud-top{
+    min-height:48px;
+    padding-top:calc(7px + var(--safe-top));
+    padding-bottom:5px;
+  }
+  #directive{top:48px;height:26px}
+  .directive-sub,.directive-sep{display:none}
+  #map{top:76px;bottom:58px}
+  .citizen{
+    transform:translate(-50%,-42%);
+    min-width:58px;
+    min-height:77px;
+  }
+  .character-art-wrap{width:54px;height:73px}
+  #hud-bottom{
+    min-height:54px;
+    padding-top:6px;
+    padding-bottom:max(7px,var(--safe-bottom));
+  }
+  #clock{font-size:8px}
+  #nav{gap:13px}
+  .nav-item{font-size:6.5px;gap:3px}
+  #first-prompt{bottom:60px}
+}
+
+/* No retrato mantemos a leitura maior da V0.4; apenas o footer passa a
+   ocupar corretamente o rodapé da viewport. */
+@media(orientation:portrait){
+  #hud-bottom{padding-left:18px;padding-right:18px}
+  #first-prompt{bottom:72px}
+}
