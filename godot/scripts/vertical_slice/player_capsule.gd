@@ -22,17 +22,20 @@ func set_input_enabled(enabled: bool) -> void:
 func _physics_process(delta: float) -> void:
 	var input_vec := Vector2.ZERO
 	if input_enabled:
+		# O joystick já aplica sua própria deadzone radial. Passar 0.0 aqui evita uma
+		# segunda deadzone do InputMap que deixava o touch brusco no celular.
 		input_vec = Input.get_vector(
 			"move_left",
 			"move_right",
 			"move_forward",
-			"move_back"
+			"move_back",
+			0.0
 		)
 
 	var direction := _camera_relative(input_vec)
 
 	# Mantém a intensidade analógica do joystick. No teclado input_vec já chega em 1.0,
-	# enquanto no touch pequenos deslocamentos agora geram caminhada lenta em vez de full speed.
+	# enquanto no touch pequenos deslocamentos geram caminhada lenta em vez de full speed.
 	velocity.x = direction.x * move_speed
 	velocity.z = direction.z * move_speed
 
