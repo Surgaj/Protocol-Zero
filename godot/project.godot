@@ -7,6 +7,9 @@ config_version=5
 config/name="Protocol Zero"
 run/main_scene="res://scenes/vertical_slice/scene_01_greybox.tscn"
 
+[autoload]
+GameState="*res://scripts/game_state.gd"
+
 [display]
 window/size/viewport_width=720
 window/size/viewport_height=1280
