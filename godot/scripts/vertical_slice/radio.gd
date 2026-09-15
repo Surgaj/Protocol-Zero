@@ -2,6 +2,8 @@ extends Node3D
 
 # PROTOCOL ZERO — Milestone 0.2
 # Primeiro objeto interativo: proximidade -> sintonização -> áudio procedural -> lock do CZI-07.
+# Build diagnóstica: além do sinal, o rádio sincroniza o botão diretamente com a UI
+# e mostra distância/near na tela para isolar bugs Web/mobile.
 
 signal proximity_changed(is_near: bool)
 signal tuning_started
@@ -32,15 +34,17 @@ var _carrier_phase: float = 0.0
 var _secondary_phase: float = 0.0
 var _rng := RandomNumberGenerator.new()
 
+# Diagnóstico temporário do Milestone 0.2.
+var _interact_button: Button
+var _debug_label: Label
+var _horizontal_distance: float = INF
+
 func _ready() -> void:
 	_rng.randomize()
 	var proximity := get_node_or_null("Proximity") as Area3D
 	_audio = get_node_or_null("StaticAudio") as AudioStreamPlayer3D
 
 	# O Area3D continua existindo, mas não é mais a única fonte de verdade.
-	# Em Web/mobile tivemos um caso real em que o prompt não apareceu apesar de
-	# Elias estar visualmente ao lado do rádio. O fallback por distância abaixo
-	# torna a interação determinística e independente de um evento perdido.
 	if proximity != null:
 		proximity.monitoring = true
 		proximity.monitorable = true
@@ -62,10 +66,12 @@ func _ready() -> void:
 		_audio.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
 
 	set_process(true)
+	call_deferred("_bind_debug_ui")
 	call_deferred("_refresh_player_proximity")
 
 func _process(delta: float) -> void:
 	_refresh_player_proximity()
+	_sync_debug_ui()
 
 	if tuning and not locked:
 		_update_lock(delta)
@@ -79,9 +85,9 @@ func begin_tuning() -> bool:
 
 	tuning = true
 	lock_timer = 0.0
+	_sync_debug_ui()
 
-	# O áudio começa em resposta ao toque/click do jogador, o que também respeita
-	# as políticas de autoplay dos navegadores mobile.
+	# O áudio começa em resposta ao toque/click do jogador, respeitando autoplay mobile.
 	if _audio != null and not _audio.playing:
 		_audio.play()
 		_playback = _audio.get_stream_playback() as AudioStreamGeneratorPlayback
@@ -102,9 +108,51 @@ func stop_tuning() -> void:
 	if _audio != null:
 		_audio.stop()
 	_playback = null
+	_sync_debug_ui()
+
+func _bind_debug_ui() -> void:
+	if get_parent() == null:
+		return
+
+	var ui := get_parent().get_node_or_null("GreyboxUI") as CanvasLayer
+	if ui == null:
+		return
+
+	_interact_button = ui.get_node_or_null("RadioInteract") as Button
+	if _interact_button != null:
+		# Para o diagnóstico, eliminamos qualquer dúvida de anchor em retrato.
+		# O viewport lógico é 720x1280 e o stretch escala isso para o device.
+		_interact_button.anchor_left = 0.0
+		_interact_button.anchor_top = 0.0
+		_interact_button.anchor_right = 0.0
+		_interact_button.anchor_bottom = 0.0
+		_interact_button.position = Vector2(490, 1080)
+		_interact_button.size = Vector2(200, 78)
+
+	_debug_label = Label.new()
+	_debug_label.name = "RadioDebug"
+	_debug_label.position = Vector2(430, 140)
+	_debug_label.size = Vector2(260, 72)
+	_debug_label.add_theme_font_size_override("font_size", 14)
+	_debug_label.text = "RADIO DEBUG"
+	ui.add_child(_debug_label)
+
+	_sync_debug_ui()
+
+func _sync_debug_ui() -> void:
+	if _interact_button != null:
+		# Fonte de verdade temporária: o botão lê o estado atual a cada frame.
+		# Assim isolamos completamente a hipótese de um signal ter sido perdido.
+		_interact_button.visible = player_near and not tuning and not locked
+		_interact_button.disabled = not player_near
+
+	if _debug_label != null:
+		var distance_text := "--" if is_inf(_horizontal_distance) else "%.2f" % _horizontal_distance
+		_debug_label.text = "dist: %s m\nnear: %s" % [distance_text, str(player_near)]
 
 func _refresh_player_proximity() -> void:
 	if locked:
+		_horizontal_distance = INF
 		_set_player_near(false)
 		return
 
@@ -112,18 +160,19 @@ func _refresh_player_proximity() -> void:
 		if get_parent() != null:
 			_player = get_parent().get_node_or_null("Elias_GreyCapsule") as CharacterBody3D
 		if _player == null:
+			_horizontal_distance = INF
 			return
 
 	# Só usamos distância horizontal. Diferenças pequenas de Y não devem impedir
 	# o prompt de aparecer quando o jogador está claramente ao lado do aparelho.
 	var radio_pos := global_position
 	var player_pos := _player.global_position
-	var horizontal_distance := Vector2(
+	_horizontal_distance = Vector2(
 		player_pos.x - radio_pos.x,
 		player_pos.z - radio_pos.z
 	).length()
 
-	_set_player_near(horizontal_distance <= interaction_radius)
+	_set_player_near(_horizontal_distance <= interaction_radius)
 
 func _set_player_near(value: bool) -> void:
 	if player_near == value:
@@ -157,12 +206,11 @@ func _complete_lock() -> void:
 	tuning = false
 	current_frequency = target_frequency
 
-	# Limpa o ruído imediatamente: o silêncio curto antes da mensagem decodificada
-	# funciona como confirmação auditiva do lock.
 	if _audio != null:
 		_audio.stop()
 	_playback = null
 
+	_sync_debug_ui()
 	tuning_feedback.emit(current_frequency, 1.0, true, 1.0)
 	signal_locked.emit(current_frequency)
 
@@ -213,6 +261,5 @@ func _on_body_entered(body: Node3D) -> void:
 func _on_body_exited(body: Node3D) -> void:
 	if body.name != "Elias_GreyCapsule":
 		return
-	# Não força false aqui: o cálculo horizontal decide. Isso evita flicker na
-	# borda do Area3D e mantém Area + distância trabalhando como redundância.
+	# Não força false aqui: o cálculo horizontal decide e evita flicker na borda.
 	_refresh_player_proximity()
