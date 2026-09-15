@@ -8,17 +8,26 @@ extends CharacterBody3D
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var movement_camera: Camera3D
+var input_enabled: bool = true
 
 func set_movement_camera(camera: Camera3D) -> void:
 	movement_camera = camera
 
+func set_input_enabled(enabled: bool) -> void:
+	input_enabled = enabled
+	if not input_enabled:
+		velocity.x = 0.0
+		velocity.z = 0.0
+
 func _physics_process(delta: float) -> void:
-	var input_vec := Input.get_vector(
-		"move_left",
-		"move_right",
-		"move_forward",
-		"move_back"
-	)
+	var input_vec := Vector2.ZERO
+	if input_enabled:
+		input_vec = Input.get_vector(
+			"move_left",
+			"move_right",
+			"move_forward",
+			"move_back"
+		)
 
 	var direction := _camera_relative(input_vec)
 
