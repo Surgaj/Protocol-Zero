@@ -130,7 +130,7 @@ func build_ui() -> void:
 
 	var panel := ColorRect.new()
 	panel.position = Vector2(24, 22)
-	panel.size = Vector2(620, 92)
+	panel.size = Vector2(620, 104)
 	panel.color = Color(0.04, 0.04, 0.04, 0.78)
 	layer.add_child(panel)
 
@@ -142,9 +142,22 @@ func build_ui() -> void:
 
 	status_label = Label.new()
 	status_label.position = Vector2(20, 44)
-	status_label.text = "OBJETIVO: atravesse a porta cinza  •  WASD / setas"
+	status_label.text = "OBJETIVO: atravesse a porta cinza\nTeclado: WASD/setas  •  Mobile/Web: arraste MOVE"
 	status_label.add_theme_font_size_override("font_size", 15)
 	panel.add_child(status_label)
+
+	var virtual_stick := Control.new()
+	virtual_stick.name = "VirtualStick"
+	virtual_stick.set_script(load("res://scripts/vertical_slice/virtual_stick.gd"))
+	virtual_stick.anchor_left = 0.0
+	virtual_stick.anchor_top = 1.0
+	virtual_stick.anchor_right = 0.0
+	virtual_stick.anchor_bottom = 1.0
+	virtual_stick.offset_left = 28.0
+	virtual_stick.offset_top = -248.0
+	virtual_stick.offset_right = 248.0
+	virtual_stick.offset_bottom = -28.0
+	layer.add_child(virtual_stick)
 
 func build_exit_trigger() -> void:
 	var area := Area3D.new()

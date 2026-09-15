@@ -1,4 +1,4 @@
-name: Godot Smoke Test
+name: Godot Web Preview
 
 on:
   push:
@@ -6,14 +6,19 @@ on:
       - godot-3d-rebuild
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  smoke:
+  build-test-publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
-      - name: Checkout
+      - name: Checkout Godot branch
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install Godot 4.7.2
         shell: bash
@@ -24,8 +29,56 @@ jobs:
           sudo mv godot-bin/Godot_v4.7.2-stable_linux.x86_64 /usr/local/bin/godot
           godot --version
 
+      - name: Install Web export templates
+        shell: bash
+        run: |
+          wget -q https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz -O export_templates.tpz
+          rm -rf /tmp/godot-export-templates
+          mkdir -p /tmp/godot-export-templates
+          unzip -q export_templates.tpz -d /tmp/godot-export-templates
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          cp -a /tmp/godot-export-templates/templates/. "$HOME/.local/share/godot/export_templates/4.7.2.stable/"
+
       - name: Parse project headless
         run: godot --headless --path godot --editor --quit
 
       - name: Run vertical slice smoke test
         run: godot --headless --path godot --script res://tests/smoke_test.gd
+
+      - name: Export Web build
+        shell: bash
+        run: |
+          rm -rf web-build
+          mkdir -p web-build
+          godot --headless --path godot --export-release "Web" "$GITHUB_WORKSPACE/web-build/index.html"
+          test -f web-build/index.html
+          touch web-build/.nojekyll
+          ls -lah web-build
+
+      - name: Upload Web build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: protocol-zero-web-preview
+          path: web-build/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish preview into existing GitHub Pages site
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          rm -rf /tmp/protocol-zero-pages
+          git worktree add --detach /tmp/protocol-zero-pages origin/main
+          rm -rf /tmp/protocol-zero-pages/godot-preview
+          mkdir -p /tmp/protocol-zero-pages/godot-preview
+          cp -a web-build/. /tmp/protocol-zero-pages/godot-preview/
+          cd /tmp/protocol-zero-pages
+          git add godot-preview
+          if git diff --cached --quiet; then
+            echo "Preview unchanged; nothing to publish."
+            exit 0
+          fi
+          git commit -m "chore: publish Godot web preview [skip ci]"
+          git push origin HEAD:main

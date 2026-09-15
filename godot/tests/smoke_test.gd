@@ -1,7 +1,6 @@
 extends SceneTree
 
 # Headless smoke test: carrega a Cena 1 e confirma os nós mínimos.
-# Executar quando houver Godot disponível:
 # godot --headless --path godot --script res://tests/smoke_test.gd
 
 func _initialize() -> void:
@@ -21,6 +20,7 @@ func _run() -> void:
 	var player := scene.get_node_or_null("Elias_GreyCapsule")
 	var camera := scene.get_node_or_null("GreyboxCamera")
 	var exit_trigger := scene.get_node_or_null("Scene01Exit")
+	var virtual_stick := scene.get_node_or_null("GreyboxUI/VirtualStick")
 
 	if player == null:
 		push_error("SMOKE FAIL: Elias_GreyCapsule ausente")
@@ -37,5 +37,10 @@ func _run() -> void:
 		quit(1)
 		return
 
-	print("SMOKE PASS: scene, player, camera e exit trigger carregados")
+	if virtual_stick == null:
+		push_error("SMOKE FAIL: VirtualStick ausente")
+		quit(1)
+		return
+
+	print("SMOKE PASS: scene, player, camera, exit trigger e virtual stick carregados")
 	quit(0)
