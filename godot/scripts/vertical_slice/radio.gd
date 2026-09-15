@@ -2,8 +2,6 @@ extends Node3D
 
 # PROTOCOL ZERO — Milestone 0.2
 # Primeiro objeto interativo: proximidade -> sintonização -> áudio procedural -> lock do CZI-07.
-# Build diagnóstica: além do sinal, o rádio sincroniza o botão diretamente com a UI
-# e mostra distância/near na tela para isolar bugs Web/mobile.
 
 signal proximity_changed(is_near: bool)
 signal tuning_started
@@ -33,10 +31,6 @@ var _carrier_gain: float = 0.0
 var _carrier_phase: float = 0.0
 var _secondary_phase: float = 0.0
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
-
-# Diagnóstico temporário do Milestone 0.2.
-var _interact_button: Button
-var _debug_label: Label
 var _horizontal_distance: float = INF
 
 func _ready() -> void:
@@ -44,7 +38,7 @@ func _ready() -> void:
 	var proximity_area: Area3D = get_node_or_null("Proximity") as Area3D
 	_audio = get_node_or_null("StaticAudio") as AudioStreamPlayer3D
 
-	# O Area3D continua existindo, mas não é mais a única fonte de verdade.
+	# Area3D + distância horizontal: redundância intencional para Web/mobile.
 	if proximity_area != null:
 		proximity_area.monitoring = true
 		proximity_area.monitorable = true
@@ -56,6 +50,8 @@ func _ready() -> void:
 	if get_parent() != null:
 		_player = get_parent().get_node_or_null("Elias_GreyCapsule") as CharacterBody3D
 
+	# Áudio procedural: longe = ruído branco; perto = ruído cai e carriers aparecem.
+	# O player começa somente após a interação, respeitando autoplay em navegadores mobile.
 	if _audio != null:
 		_generator = AudioStreamGenerator.new()
 		_generator.mix_rate = 22050.0
@@ -66,12 +62,10 @@ func _ready() -> void:
 		_audio.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
 
 	set_process(true)
-	call_deferred("_bind_debug_ui")
 	call_deferred("_refresh_player_proximity")
 
 func _process(delta: float) -> void:
 	_refresh_player_proximity()
-	_sync_debug_ui()
 
 	if tuning and not locked:
 		_update_lock(delta)
@@ -84,9 +78,7 @@ func begin_tuning() -> bool:
 
 	tuning = true
 	lock_timer = 0.0
-	_sync_debug_ui()
 
-	# O áudio começa em resposta ao toque/click do jogador, respeitando autoplay mobile.
 	if _audio != null and not _audio.playing:
 		_audio.play()
 		_playback = _audio.get_stream_playback() as AudioStreamGeneratorPlayback
@@ -107,43 +99,9 @@ func stop_tuning() -> void:
 	if _audio != null:
 		_audio.stop()
 	_playback = null
-	_sync_debug_ui()
 
-func _bind_debug_ui() -> void:
-	if get_parent() == null:
-		return
-
-	var ui: CanvasLayer = get_parent().get_node_or_null("GreyboxUI") as CanvasLayer
-	if ui == null:
-		return
-
-	_interact_button = ui.get_node_or_null("RadioInteract") as Button
-	if _interact_button != null:
-		_interact_button.anchor_left = 0.0
-		_interact_button.anchor_top = 0.0
-		_interact_button.anchor_right = 0.0
-		_interact_button.anchor_bottom = 0.0
-		_interact_button.position = Vector2(490, 1080)
-		_interact_button.size = Vector2(200, 78)
-
-	_debug_label = Label.new()
-	_debug_label.name = "RadioDebug"
-	_debug_label.position = Vector2(430, 140)
-	_debug_label.size = Vector2(260, 72)
-	_debug_label.add_theme_font_size_override("font_size", 14)
-	_debug_label.text = "RADIO DEBUG"
-	ui.add_child(_debug_label)
-
-	_sync_debug_ui()
-
-func _sync_debug_ui() -> void:
-	if _interact_button != null:
-		_interact_button.visible = player_near and not tuning and not locked
-		_interact_button.disabled = not player_near
-
-	if _debug_label != null:
-		var distance_text: String = "--" if is_inf(_horizontal_distance) else "%.2f" % _horizontal_distance
-		_debug_label.text = "dist: %s m\nnear: %s" % [distance_text, str(player_near)]
+func get_horizontal_distance() -> float:
+	return _horizontal_distance
 
 func _refresh_player_proximity() -> void:
 	if locked:
@@ -199,11 +157,11 @@ func _complete_lock() -> void:
 	tuning = false
 	current_frequency = target_frequency
 
+	# O ruído corta no lock; o pequeno silêncio funciona como confirmação auditiva.
 	if _audio != null:
 		_audio.stop()
 	_playback = null
 
-	_sync_debug_ui()
 	tuning_feedback.emit(current_frequency, 1.0, true, 1.0)
 	signal_locked.emit(current_frequency)
 
