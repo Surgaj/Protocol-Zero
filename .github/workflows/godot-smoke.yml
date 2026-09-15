@@ -45,13 +45,17 @@ jobs:
       - name: Run vertical slice smoke test
         run: godot --headless --path godot --script res://tests/smoke_test.gd
 
-      - name: Export Web build
+      - name: Export Web build with cache-busted asset names
         shell: bash
         run: |
           rm -rf web-build
           mkdir -p web-build
-          godot --headless --path godot --export-release "Web" "$GITHUB_WORKSPACE/web-build/index.html"
-          test -f web-build/index.html
+          SHORT_SHA="${GITHUB_SHA::8}"
+          BASENAME="protocol-zero-${SHORT_SHA}"
+          godot --headless --path godot --export-release "Web" "$GITHUB_WORKSPACE/web-build/${BASENAME}.html"
+          test -f "web-build/${BASENAME}.html"
+          cp "web-build/${BASENAME}.html" web-build/index.html
+          printf '%s\n' "$SHORT_SHA" > web-build/build-id.txt
           touch web-build/.nojekyll
           ls -lah web-build
 
