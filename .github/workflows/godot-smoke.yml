@@ -39,20 +39,41 @@ jobs:
           mkdir -p "$HOME/.local/share/godot/export_templates/4.7.2.stable"
           cp -a /tmp/godot-export-templates/templates/. "$HOME/.local/share/godot/export_templates/4.7.2.stable/"
 
-      - name: Parse project headless
-        run: godot --headless --path godot --editor --quit
+      - name: Parse project headless from clean cache
+        shell: bash
+        run: |
+          set -o pipefail
+          rm -rf godot/.godot
+          godot --headless --path godot --editor --quit 2>&1 | tee parse.log
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|Failed to load script|Attempt to connect nonexistent signal' parse.log; then
+            echo 'Godot parse diagnostics found; failing CI.'
+            exit 1
+          fi
 
       - name: Run vertical slice smoke test
-        run: godot --headless --path godot --script res://tests/smoke_test.gd
+        shell: bash
+        run: |
+          set -o pipefail
+          godot --headless --path godot --script res://tests/smoke_test.gd 2>&1 | tee smoke.log
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|Failed to load script|Attempt to connect nonexistent signal|SMOKE FAIL:' smoke.log; then
+            echo 'Godot smoke diagnostics found; failing CI.'
+            exit 1
+          fi
+          grep -q 'SMOKE PASS:' smoke.log
 
       - name: Export Web build with cache-busted asset names
         shell: bash
         run: |
+          set -o pipefail
           rm -rf web-build
           mkdir -p web-build
           SHORT_SHA="${GITHUB_SHA::8}"
           BASENAME="protocol-zero-${SHORT_SHA}"
-          godot --headless --path godot --export-release "Web" "$GITHUB_WORKSPACE/web-build/${BASENAME}.html"
+          godot --headless --path godot --export-release "Web" "$GITHUB_WORKSPACE/web-build/${BASENAME}.html" 2>&1 | tee export.log
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|Failed to load script|Attempt to connect nonexistent signal' export.log; then
+            echo 'Godot export diagnostics found; failing CI.'
+            exit 1
+          fi
           test -f "web-build/${BASENAME}.html"
           cp "web-build/${BASENAME}.html" web-build/index.html
           printf '%s\n' "$SHORT_SHA" > web-build/build-id.txt
