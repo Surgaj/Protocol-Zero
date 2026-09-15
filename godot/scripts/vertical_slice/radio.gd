@@ -2,6 +2,8 @@ extends Node3D
 
 # PROTOCOL ZERO — Milestone 0.2
 # Primeiro objeto interativo: proximidade -> sintonização -> áudio procedural -> lock do CZI-07.
+# O áudio da sintonia usa saída não-posicional para Web/mobile: durante o minigame,
+# clareza e confiabilidade importam mais que espacialização 3D.
 
 signal proximity_changed(is_near: bool)
 signal tuning_started
@@ -23,7 +25,8 @@ var locked: bool = false
 var lock_timer: float = 0.0
 
 var _player: CharacterBody3D
-var _audio: AudioStreamPlayer3D
+var _legacy_audio_3d: AudioStreamPlayer3D
+var _audio: AudioStreamPlayer
 var _playback: AudioStreamGeneratorPlayback
 var _generator: AudioStreamGenerator
 var _noise_gain: float = 0.26
@@ -36,7 +39,7 @@ var _horizontal_distance: float = INF
 func _ready() -> void:
 	_rng.randomize()
 	var proximity_area: Area3D = get_node_or_null("Proximity") as Area3D
-	_audio = get_node_or_null("StaticAudio") as AudioStreamPlayer3D
+	_legacy_audio_3d = get_node_or_null("StaticAudio") as AudioStreamPlayer3D
 
 	# Area3D + distância horizontal: redundância intencional para Web/mobile.
 	if proximity_area != null:
@@ -50,16 +53,25 @@ func _ready() -> void:
 	if get_parent() != null:
 		_player = get_parent().get_node_or_null("Elias_GreyCapsule") as CharacterBody3D
 
-	# Áudio procedural: longe = ruído branco; perto = ruído cai e carriers aparecem.
-	# O player começa somente após a interação, respeitando autoplay em navegadores mobile.
-	if _audio != null:
-		_generator = AudioStreamGenerator.new()
-		_generator.mix_rate = 22050.0
-		_generator.buffer_length = 0.35
-		_audio.stream = _generator
-		_audio.volume_db = -5.0
-		_audio.max_distance = 8.0
-		_audio.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+	# AudioStreamGenerator é criado no carregamento, mas só toca depois do toque em INTERAGIR.
+	# A saída principal é AudioStreamPlayer (não-posicional), mais previsível no Web/mobile.
+	_generator = AudioStreamGenerator.new()
+	_generator.mix_rate = 22050.0
+	_generator.buffer_length = 0.45
+
+	_audio = AudioStreamPlayer.new()
+	_audio.name = "StaticAudioMobileSafe"
+	_audio.stream = _generator
+	_audio.volume_db = -1.0
+	add_child(_audio)
+
+	# Mantemos o nó 3D configurado por compatibilidade/inspeção do greybox e smoke test,
+	# mas ele não é reproduzido para evitar diferenças de atenuação entre browsers.
+	if _legacy_audio_3d != null:
+		_legacy_audio_3d.stream = _generator
+		_legacy_audio_3d.volume_db = -1.0
+		_legacy_audio_3d.max_distance = 8.0
+		_legacy_audio_3d.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
 
 	set_process(true)
 	call_deferred("_refresh_player_proximity")
@@ -79,11 +91,19 @@ func begin_tuning() -> bool:
 	tuning = true
 	lock_timer = 0.0
 
+	# Esta função é chamada diretamente pelo botão INTERAGIR: o play() acontece dentro
+	# do gesto do usuário, requisito importante para navegadores mobile/iOS.
+	var master_bus: int = AudioServer.get_bus_index("Master")
+	if master_bus >= 0:
+		AudioServer.set_bus_mute(master_bus, false)
+
 	if _audio != null and not _audio.playing:
 		_audio.play()
 		_playback = _audio.get_stream_playback() as AudioStreamGeneratorPlayback
 
 	_update_audio_character()
+	# Pré-enche o buffer ainda no gesto de interação para reduzir underrun no primeiro frame Web.
+	_fill_audio_buffer()
 	tuning_started.emit()
 	return true
 
@@ -98,6 +118,8 @@ func stop_tuning() -> void:
 	lock_timer = 0.0
 	if _audio != null:
 		_audio.stop()
+	if _legacy_audio_3d != null:
+		_legacy_audio_3d.stop()
 	_playback = null
 
 func get_horizontal_distance() -> float:
@@ -160,6 +182,8 @@ func _complete_lock() -> void:
 	# O ruído corta no lock; o pequeno silêncio funciona como confirmação auditiva.
 	if _audio != null:
 		_audio.stop()
+	if _legacy_audio_3d != null:
+		_legacy_audio_3d.stop()
 	_playback = null
 
 	tuning_feedback.emit(current_frequency, 1.0, true, 1.0)
@@ -172,11 +196,11 @@ func _frequency_proximity() -> float:
 func _update_audio_character() -> void:
 	var frequency_proximity: float = _frequency_proximity()
 
-	_noise_gain = lerpf(0.30, 0.055, frequency_proximity)
+	_noise_gain = lerpf(0.34, 0.065, frequency_proximity)
 	if frequency_proximity <= 0.18:
 		_carrier_gain = 0.0
 	else:
-		_carrier_gain = ((frequency_proximity - 0.18) / 0.82) * 0.18
+		_carrier_gain = ((frequency_proximity - 0.18) / 0.82) * 0.22
 
 func _fill_audio_buffer() -> void:
 	if _audio == null or not _audio.playing:
@@ -190,7 +214,7 @@ func _fill_audio_buffer() -> void:
 	var mix_rate: float = _generator.mix_rate
 	var frequency_proximity: float = _frequency_proximity()
 	var carrier_hz: float = 760.0 + current_frequency * 1.25
-	var secondary_gain: float = maxf(0.0, (frequency_proximity - 0.62) / 0.38) * 0.075
+	var secondary_gain: float = maxf(0.0, (frequency_proximity - 0.62) / 0.38) * 0.09
 
 	for _i: int in range(frames):
 		var noise: float = _rng.randf_range(-1.0, 1.0) * _noise_gain
