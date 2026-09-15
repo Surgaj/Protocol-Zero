@@ -1,0 +1,31 @@
+name: Godot Smoke Test
+
+on:
+  push:
+    branches:
+      - godot-3d-rebuild
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Godot 4.7.2
+        shell: bash
+        run: |
+          wget -q https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip -O godot.zip
+          unzip -q godot.zip -d godot-bin
+          chmod +x godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          sudo mv godot-bin/Godot_v4.7.2-stable_linux.x86_64 /usr/local/bin/godot
+          godot --version
+
+      - name: Parse project headless
+        run: godot --headless --path godot --editor --quit
+
+      - name: Run vertical slice smoke test
+        run: godot --headless --path godot --script res://tests/smoke_test.gd
