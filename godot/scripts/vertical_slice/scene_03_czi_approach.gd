@@ -170,8 +170,8 @@ func _build_ui() -> void:
 	layer.add_child(virtual_stick)
 
 func _build_entry_trigger() -> void:
-	# A porta ainda é greybox fechada visualmente; alcançar o limiar carrega o interior.
-	# Maya fica fora: só Elias pode disparar a troca de cena.
+	# Cena 3 ainda é mundo externo. Cruzar a porta carrega o único mapa persistente do CZI-07.
+	# Depois disso, corredor/gerador/dormitório não trocam mais de cena entre si.
 	var area := Area3D.new()
 	area.name = "CZIEntryTrigger"
 	area.position = Vector3(0, 1.0, -5.30)
@@ -187,4 +187,4 @@ func _build_entry_trigger() -> void:
 func _on_czi_entry_reached(body: Node3D) -> void:
 	if body.name != "Elias_GreyCapsule":
 		return
-	get_tree().change_scene_to_file("res://scenes/vertical_slice/scene_04_bunker_wakes.tscn")
+	get_tree().change_scene_to_file("res://scenes/vertical_slice/czi07_base.tscn")
