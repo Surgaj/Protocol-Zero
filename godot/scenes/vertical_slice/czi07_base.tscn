@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource path="res://scripts/vertical_slice/czi07_base.gd" type="Script" id="1_czi07"]
+[ext_resource path="res://scripts/vertical_slice/dormitory_decision.gd" type="Script" id="2_dormitory"]
 
 [node name="CZI07Base" type="Node3D"]
 script = ExtResource("1_czi07")
@@ -10,3 +11,6 @@ rotation_degrees = Vector3(-55, -35, 0)
 light_color = Color(0.46, 0.50, 0.54, 1)
 light_energy = 0.48
 shadow_enabled = false
+
+[node name="DormitoryDecision" type="Node" parent="."]
+script = ExtResource("2_dormitory")
