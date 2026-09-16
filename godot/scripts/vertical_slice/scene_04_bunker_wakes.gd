@@ -14,10 +14,12 @@ var objective_label: Label
 var status_label: Label
 var generator_body: StaticBody3D
 
+var generator_light: OmniLight3D
 var entry_light: OmniLight3D
 var corridor_light: OmniLight3D
 var distant_room_light: OmniLight3D
 var emergency_light: OmniLight3D
+var interior_fill_light: DirectionalLight3D
 var bunker_environment: Environment
 
 var drone_player: AudioStreamPlayer
@@ -39,6 +41,7 @@ func _ready() -> void:
 	_build_environment()
 	_build_bunker_layout()
 	_build_lights()
+	interior_fill_light = get_node_or_null("DeadInteriorFill") as DirectionalLight3D
 	player = _build_player()
 	gameplay_camera = _build_camera(player)
 	player.call("set_movement_camera", gameplay_camera)
@@ -85,45 +88,56 @@ func _build_environment() -> void:
 	bunker_environment.background_mode = Environment.BG_COLOR
 	bunker_environment.background_color = Color("050505")
 	bunker_environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	bunker_environment.ambient_light_color = Color("8f9597")
-	bunker_environment.ambient_light_energy = 0.055
+	bunker_environment.ambient_light_color = Color("a7adb0")
+	# Escuro, mas não preto. Mobile precisa preservar leitura do chão e da silhueta.
+	bunker_environment.ambient_light_energy = 0.12
 	world.environment = bunker_environment
 	add_child(world)
 
 func _build_bunker_layout() -> void:
-	var floor_color := Color("3f4141")
-	var wall_color := Color("4b4d4e")
-	var steel_color := Color("5b5d5d")
+	var floor_color := Color("4b4d4d")
+	var wall_color := Color("555859")
+	var steel_color := Color("686b6c")
 
 	# Corredor principal: o gerador é visível ao fundo desde a entrada.
 	_add_static_box("MainFloor", Vector3(6.0, 0.30, 18.0), Vector3(0, -0.15, -1.5), floor_color)
 	_add_static_box("LeftWall", Vector3(0.32, 3.4, 18.0), Vector3(-2.84, 1.70, -1.5), wall_color)
-	_add_static_box("RightCutawayLip", Vector3(0.32, 0.68, 18.0), Vector3(2.84, 0.34, -1.5), Color("404243"))
+	_add_static_box("RightCutawayLip", Vector3(0.32, 0.68, 18.0), Vector3(2.84, 0.34, -1.5), Color("484b4c"))
 	_add_static_box("BackWall", Vector3(6.0, 3.4, 0.32), Vector3(0, 1.70, -10.35), wall_color)
 	_add_static_box("EntryLintel", Vector3(6.0, 0.65, 0.36), Vector3(0, 3.0, 7.28), steel_color)
 
 	# Uma única pergunta visual antes do gerador: uma porta interna morta.
 	# Atrás dela existe geometricamente uma segunda sala, mas o jogador não precisa entrar nela no 0.4.
-	_add_static_box("SealedHabitationDoor", Vector3(0.38, 2.45, 2.15), Vector3(2.70, 1.225, -3.7), Color("666867"))
-	_add_static_box("DeadAccessPanel", Vector3(0.22, 0.72, 0.44), Vector3(2.46, 1.18, -2.35), Color("343535"))
+	_add_static_box("SealedHabitationDoor", Vector3(0.38, 2.45, 2.15), Vector3(2.70, 1.225, -3.7), Color("727574"))
+	_add_static_box("DeadAccessPanel", Vector3(0.22, 0.72, 0.44), Vector3(2.46, 1.18, -2.35), Color("414344"))
 
 	# Segunda sala deliberadamente fora da rota principal. Sua luz final vende escala/profundidade.
-	_add_static_box("DistantRoomFloor", Vector3(4.2, 0.30, 6.2), Vector3(4.75, -0.15, -4.9), Color("383a3b"))
-	_add_static_box("DistantRoomFarWall", Vector3(0.30, 3.1, 6.2), Vector3(6.72, 1.55, -4.9), Color("444748"))
-	_add_static_box("DistantRoomBackWall", Vector3(4.2, 3.1, 0.30), Vector3(4.75, 1.55, -7.85), Color("444748"))
-	_add_static_box("DistantRoomFrontLip", Vector3(4.2, 0.60, 0.30), Vector3(4.75, 0.30, -1.95), Color("3d4041"))
+	_add_static_box("DistantRoomFloor", Vector3(4.2, 0.30, 6.2), Vector3(4.75, -0.15, -4.9), Color("434647"))
+	_add_static_box("DistantRoomFarWall", Vector3(0.30, 3.1, 6.2), Vector3(6.72, 1.55, -4.9), Color("4f5354"))
+	_add_static_box("DistantRoomBackWall", Vector3(4.2, 3.1, 0.30), Vector3(4.75, 1.55, -7.85), Color("4f5354"))
+	_add_static_box("DistantRoomFrontLip", Vector3(4.2, 0.60, 0.30), Vector3(4.75, 0.30, -1.95), Color("484b4c"))
 
-	generator_body = _add_static_box("AuxGenerator", Vector3(1.75, 1.25, 1.15), Vector3(0, 0.625, -7.65), Color("55584f"))
-	_add_static_box("GeneratorTop", Vector3(1.35, 0.28, 0.86), Vector3(0, 1.36, -7.65), Color("686a5e"))
-	_add_static_box("GeneratorPipe", Vector3(0.22, 1.35, 0.22), Vector3(-0.62, 1.65, -7.72), Color("4b4d49"))
+	generator_body = _add_static_box("AuxGenerator", Vector3(1.75, 1.25, 1.15), Vector3(0, 0.625, -7.65), Color("666a5f"))
+	_add_static_box("GeneratorTop", Vector3(1.35, 0.28, 0.86), Vector3(0, 1.36, -7.65), Color("7b7e70"))
+	_add_static_box("GeneratorPipe", Vector3(0.22, 1.35, 0.22), Vector3(-0.62, 1.65, -7.72), Color("5b5e59"))
 
 func _build_lights() -> void:
+	# A primeira luz real precisa estar onde Elias está quando liga o gerador.
+	generator_light = OmniLight3D.new()
+	generator_light.name = "GeneratorRoomLight"
+	generator_light.position = Vector3(0, 2.55, -7.0)
+	generator_light.light_color = Color("ded6bd")
+	generator_light.light_energy = 0.0
+	generator_light.omni_range = 6.2
+	generator_light.shadow_enabled = true
+	add_child(generator_light)
+
 	entry_light = OmniLight3D.new()
 	entry_light.name = "EntryCeilingLight"
 	entry_light.position = Vector3(0, 2.55, 3.3)
 	entry_light.light_color = Color("d9d0b2")
 	entry_light.light_energy = 0.0
-	entry_light.omni_range = 4.6
+	entry_light.omni_range = 6.0
 	entry_light.shadow_enabled = true
 	add_child(entry_light)
 
@@ -132,7 +146,7 @@ func _build_lights() -> void:
 	corridor_light.position = Vector3(0, 2.55, -2.1)
 	corridor_light.light_color = Color("cec9b8")
 	corridor_light.light_energy = 0.0
-	corridor_light.omni_range = 5.2
+	corridor_light.omni_range = 6.5
 	corridor_light.shadow_enabled = true
 	add_child(corridor_light)
 
@@ -141,7 +155,7 @@ func _build_lights() -> void:
 	distant_room_light.position = Vector3(4.75, 2.15, -5.2)
 	distant_room_light.light_color = Color("c9d1c4")
 	distant_room_light.light_energy = 0.0
-	distant_room_light.omni_range = 5.5
+	distant_room_light.omni_range = 6.5
 	# Sem sombra no greybox: queremos que o clarão vaze pela porta selada e seja percebido da rota principal.
 	distant_room_light.shadow_enabled = false
 	add_child(distant_room_light)
@@ -149,9 +163,9 @@ func _build_lights() -> void:
 	emergency_light = OmniLight3D.new()
 	emergency_light.name = "EmergencyBeacon"
 	emergency_light.position = Vector3(0, 2.05, -6.9)
-	emergency_light.light_color = Color("9e2d24")
-	emergency_light.light_energy = 0.04
-	emergency_light.omni_range = 3.7
+	emergency_light.light_color = Color("b23a2e")
+	emergency_light.light_energy = 0.08
+	emergency_light.omni_range = 5.2
 	emergency_light.shadow_enabled = false
 	add_child(emergency_light)
 
@@ -166,7 +180,7 @@ func _build_player() -> CharacterBody3D:
 	var mesh := CapsuleMesh.new()
 	mesh.radius = 0.32
 	mesh.height = 1.80
-	mesh.material = _make_material(Color("b7b7b7"), 0.95)
+	mesh.material = _make_material(Color("c8c8c8"), 0.95)
 	mesh_instance.mesh = mesh
 	body.add_child(mesh_instance)
 
@@ -281,7 +295,7 @@ func _update_emergency_beacon() -> void:
 		emergency_light.light_energy = 0.0
 		return
 	var phase: float = fmod(_scene_elapsed, 4.0)
-	emergency_light.light_energy = 0.42 if phase < 0.34 else 0.035
+	emergency_light.light_energy = 0.62 if phase < 0.34 else 0.08
 
 func _on_generator_interact_pressed() -> void:
 	if power_started:
@@ -329,17 +343,17 @@ func _fill_drone_buffer() -> void:
 
 func _run_power_sequence() -> void:
 	# Timing congelado para o primeiro playtest do 0.4:
-	# 0.0 s gerador; 1.5 s primeira luz instável; 3.0 s corredor; 5.0 s sala distante.
+	# 0.0 s gerador; 1.5 s luz junto ao Elias; 3.0 s corredor/entrada; 5.0 s sala distante.
 	await get_tree().create_timer(1.50).timeout
-	entry_light.light_energy = 1.75
+	generator_light.light_energy = 5.2
 	await get_tree().create_timer(0.12).timeout
-	entry_light.light_energy = 0.18
+	generator_light.light_energy = 0.55
 	await get_tree().create_timer(0.16).timeout
-	entry_light.light_energy = 1.40
+	generator_light.light_energy = 4.4
 	await get_tree().create_timer(0.14).timeout
-	entry_light.light_energy = 0.32
+	generator_light.light_energy = 0.85
 	await get_tree().create_timer(0.16).timeout
-	entry_light.light_energy = 1.62
+	generator_light.light_energy = 4.8
 
 	await get_tree().create_timer(0.92).timeout
 	_apply_power_stage(2)
@@ -349,19 +363,33 @@ func _run_power_sequence() -> void:
 	_complete_power_sequence()
 
 func _apply_power_stage(stage: int) -> void:
-	if stage >= 1 and entry_light != null:
-		entry_light.light_energy = 1.62
-	if stage >= 2 and corridor_light != null:
-		corridor_light.light_energy = 1.38
-	if stage >= 3 and distant_room_light != null:
-		distant_room_light.light_energy = 2.05
+	if stage >= 1 and generator_light != null:
+		generator_light.light_energy = 4.8
+	if stage >= 2:
+		if corridor_light != null:
+			corridor_light.light_energy = 4.0
+		if entry_light != null:
+			entry_light.light_energy = 3.6
+		if bunker_environment != null:
+			bunker_environment.ambient_light_energy = 0.26
+		if interior_fill_light != null:
+			interior_fill_light.light_energy = 0.62
+	if stage >= 3:
+		if distant_room_light != null:
+			distant_room_light.light_energy = 5.0
+		if bunker_environment != null:
+			bunker_environment.ambient_light_energy = 0.50
+		if interior_fill_light != null:
+			interior_fill_light.light_energy = 0.82
 
 func _complete_power_sequence() -> void:
 	power_complete = true
 	_apply_power_stage(3)
 	_drone_target_gain = 0.14
 	if bunker_environment != null:
-		bunker_environment.ambient_light_energy = 0.12
+		bunker_environment.ambient_light_energy = 0.50
+	if interior_fill_light != null:
+		interior_fill_light.light_energy = 0.82
 	status_label.text = "ENERGIA AUXILIAR RESTABELECIDA"
 	player.call("set_input_enabled", true)
 	virtual_stick.visible = true
