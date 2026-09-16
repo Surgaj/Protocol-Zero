@@ -99,8 +99,8 @@ func _run() -> void:
 	scene2_signal.call("apply_choice_for_test", "signal")
 	var tense_rel: Dictionary = game_state.call("get_relation", "maya", "elias") as Dictionary
 	var tense_memories: Array = game_state.call("get_memories", "maya") as Array
-	if float(tense_rel["tension"]) <= 0.20 or tense_memories.size() != 1:
-		_fail("escolha de priorizar sinal não persistiu relação/memória")
+	if float(tense_rel["tension"]) <= 0.20 or tense_memories.size() != 1 or not bool(game_state.call("is_party_member", "maya")):
+		_fail("escolha de priorizar sinal não persistiu relação/memória/Maya no grupo")
 		return
 	scene2_signal.queue_free()
 	await process_frame
@@ -121,7 +121,7 @@ func _run() -> void:
 	scene3_tense.queue_free()
 	await process_frame
 
-	# Caminho cooperativo: mesmos sistemas, parâmetros espaciais diferentes.
+	# Caminho cooperativo + JORNADA: Maya entra no grupo e Iris/Dante/Noah são recrutados em uma cena única.
 	game_state.call("reset_new_game")
 	var scene2_coop: Node = _instantiate_scene("res://scenes/vertical_slice/scene_02_maya.tscn")
 	if scene2_coop == null:
@@ -137,6 +137,34 @@ func _run() -> void:
 	scene2_coop.queue_free()
 	await process_frame
 
+	var journey: Node = _instantiate_scene("res://scenes/vertical_slice/scene_02b_journey.tscn")
+	if journey == null:
+		_fail("não foi possível carregar scene_02b_journey.tscn")
+		return
+	await process_frame
+	await process_frame
+	if journey.get_node_or_null("IrisEncounterTrigger") == null or journey.get_node_or_null("DanteEncounterTrigger") == null or journey.get_node_or_null("NoahEncounterTrigger") == null or journey.get_node_or_null("JourneyExit") == null:
+		_fail("Jornada não possui as três batidas e saída")
+		return
+	if journey.get_node_or_null("ClinicTable") == null or journey.get_node_or_null("CollapsedBarrierA") == null or journey.get_node_or_null("NoahConsole") == null:
+		_fail("Jornada perdeu os três marcos físicos no mesmo mapa")
+		return
+	var journey_panel: Control = journey.get_node_or_null("GreyboxUI/JourneyEncounter") as Control
+	if journey_panel == null or journey_panel.find_child("FollowButton", true, false) == null:
+		_fail("Jornada não construiu painel modal/SEGUIR")
+		return
+
+	journey.call("apply_encounter_for_test", "iris")
+	journey.call("apply_encounter_for_test", "dante")
+	journey.call("apply_encounter_for_test", "noah")
+	await process_frame
+	var party: Array = game_state.call("get_party_members") as Array
+	if party.size() != 5 or not party.has("iris") or not party.has("dante") or not party.has("noah") or int(journey.call("get_joined_count")) != 4:
+		_fail("Jornada não formou grupo de cinco")
+		return
+	journey.queue_free()
+	await process_frame
+
 	var scene3_coop: Node = _instantiate_scene("res://scenes/vertical_slice/scene_03_czi_approach.tscn")
 	if scene3_coop == null:
 		_fail("Cena 3 cooperativa não carregou")
@@ -149,6 +177,9 @@ func _run() -> void:
 		return
 	if absf(float(maya_coop.get("follow_distance")) - 1.2) > 0.01 or not bool(maya_coop.get("waits_at_doors")) or bool(maya_coop.get("takes_initiative")):
 		_fail("Cena 3 não traduziu confiança em proximidade/espera")
+		return
+	if scene3_coop.get_node_or_null("Iris_GroupMarker") == null or scene3_coop.get_node_or_null("Dante_GroupMarker") == null or scene3_coop.get_node_or_null("Noah_GroupMarker") == null:
+		_fail("grupo formado na Jornada não chegou ao portão do CZI-07")
 		return
 	if scene3_coop.get_node_or_null("CZIEntryTrigger") == null:
 		_fail("Cena 3 não possui limiar de entrada para o CZI-07")
@@ -215,5 +246,5 @@ func _run() -> void:
 		_fail("retorno do dormitório não preserva o mesmo mapa/player")
 		return
 
-	print("SMOKE PASS: rádio + GameState + Maya + entrada CZI + bunker persistente contínuo")
+	print("SMOKE PASS: rádio + Maya + Jornada + grupo de cinco + CZI persistente")
 	quit(0)
