@@ -156,28 +156,36 @@ func _run() -> void:
 	scene3_coop.queue_free()
 	await process_frame
 
-	# CENA 4 — bunker morto -> desperto. O smoke prova estrutura/estado; sensação/timing ficam para device real.
-	var scene4: Node = _instantiate_scene("res://scenes/vertical_slice/scene_04_bunker_wakes.tscn")
-	if scene4 == null:
-		_fail("não foi possível carregar scene_04_bunker_wakes.tscn")
+	# CZI-07 persistente — entrada, corredor, gerador e dormitório coexistem no MESMO mapa.
+	# O smoke prova estrutura/estado; sensação, leitura espacial e backtracking continuam sendo validados em device real.
+	var czi: Node = _instantiate_scene("res://scenes/vertical_slice/czi07_base.tscn")
+	if czi == null:
+		_fail("não foi possível carregar czi07_base.tscn")
 		return
 	await process_frame
 	await process_frame
-	var bunker_player: CharacterBody3D = scene4.get_node_or_null("Elias_GreyCapsule") as CharacterBody3D
-	var generator: StaticBody3D = scene4.get_node_or_null("AuxGenerator") as StaticBody3D
-	var bunker_interact: Button = scene4.get_node_or_null("GreyboxUI/GeneratorInteract") as Button
-	var entry_light: OmniLight3D = scene4.get_node_or_null("EntryCeilingLight") as OmniLight3D
-	var corridor_light: OmniLight3D = scene4.get_node_or_null("CorridorLight") as OmniLight3D
-	var distant_light: OmniLight3D = scene4.get_node_or_null("DistantRoomLight") as OmniLight3D
-	var drone: AudioStreamPlayer = scene4.get_node_or_null("BunkerDrone") as AudioStreamPlayer
-	if bunker_player == null or generator == null or bunker_interact == null or entry_light == null or corridor_light == null or distant_light == null or drone == null:
-		_fail("Cena 4 incompleta: player/gerador/luzes/áudio/UI")
+
+	var bunker_player: CharacterBody3D = czi.get_node_or_null("Elias_GreyCapsule") as CharacterBody3D
+	var generator: StaticBody3D = czi.get_node_or_null("Geometry/GeneratorRoom/AuxGenerator") as StaticBody3D
+	var bunker_interact: Button = czi.get_node_or_null("GreyboxUI/GeneratorInteract") as Button
+	var generator_light: OmniLight3D = czi.get_node_or_null("GeneratorRoomLight") as OmniLight3D
+	var entry_light: OmniLight3D = czi.get_node_or_null("EntryCeilingLight") as OmniLight3D
+	var corridor_light: OmniLight3D = czi.get_node_or_null("CorridorLight") as OmniLight3D
+	var dormitory_light: OmniLight3D = czi.get_node_or_null("DormitoryLight") as OmniLight3D
+	var drone: AudioStreamPlayer = czi.get_node_or_null("BunkerDrone") as AudioStreamPlayer
+	var dormitory_trigger: Area3D = czi.get_node_or_null("DormitoryTrigger") as Area3D
+	if bunker_player == null or generator == null or bunker_interact == null or generator_light == null or entry_light == null or corridor_light == null or dormitory_light == null or drone == null or dormitory_trigger == null:
+		_fail("CZI-07 incompleto: player/gerador/luzes/áudio/UI/trigger")
 		return
-	if scene4.get_node_or_null("SealedHabitationDoor") == null or scene4.get_node_or_null("DistantRoomFloor") == null:
-		_fail("Cena 4 perdeu a segunda sala/porta narrativa deliberada")
+
+	if czi.get_node_or_null("Geometry/EntranceHall") == null or czi.get_node_or_null("Geometry/MainCorridor") == null or czi.get_node_or_null("Geometry/GeneratorRoom") == null or czi.get_node_or_null("Geometry/DormitoryRoom") == null:
+		_fail("CZI-07 não instancia as quatro áreas no mesmo mapa")
+		return
+	if czi.get_node_or_null("Geometry/DormitoryRoom/DormitoryFloor") == null or czi.get_node_or_null("Geometry/MainCorridor/DormDoorLintel") == null:
+		_fail("CZI-07 perdeu passagem física/dormitório contínuo")
 		return
 	if drone.stream == null:
-		_fail("Cena 4 não configurou AudioStreamGenerator do bunker")
+		_fail("CZI-07 não configurou AudioStreamGenerator do bunker")
 		return
 
 	bunker_player.global_position = Vector3(generator.global_position.x + 0.8, 0.90, generator.global_position.z)
@@ -187,14 +195,25 @@ func _run() -> void:
 		_fail("INTERAGIR do gerador auxiliar não aparece por proximidade")
 		return
 
-	scene4.call("apply_power_stage_for_test", 3)
+	czi.call("apply_power_stage_for_test", 3)
 	await process_frame
-	if not bool(scene4.get("power_complete")):
-		_fail("Cena 4 não conclui estado de energia no estágio final")
+	if not bool(czi.get("power_complete")):
+		_fail("CZI-07 não conclui estado de energia no estágio final")
 		return
-	if entry_light.light_energy <= 0.0 or corridor_light.light_energy <= 0.0 or distant_light.light_energy <= 0.0:
-		_fail("Cena 4 não traduz energia em iluminação sequencial")
+	if generator_light.light_energy <= 0.0 or entry_light.light_energy <= 0.0 or corridor_light.light_energy <= 0.0 or dormitory_light.light_energy <= 0.0:
+		_fail("CZI-07 não traduz energia em iluminação sequencial entre salas")
 		return
 
-	print("SMOKE PASS: rádio + GameState + Maya + entrada CZI + bunker desperto")
+	# Prova arquitetural: entrar/sair do dormitório muda apenas a zona; player e mapa continuam os mesmos.
+	var original_parent: Node = bunker_player.get_parent()
+	czi.call("_on_dormitory_entered", bunker_player)
+	if String(czi.get("current_zone")) != "dormitory" or bunker_player.get_parent() != original_parent:
+		_fail("entrada no dormitório não preserva o mesmo mapa/player")
+		return
+	czi.call("_on_dormitory_exited", bunker_player)
+	if String(czi.get("current_zone")) != "interior" or bunker_player.get_parent() != original_parent:
+		_fail("retorno do dormitório não preserva o mesmo mapa/player")
+		return
+
+	print("SMOKE PASS: rádio + GameState + Maya + entrada CZI + bunker persistente contínuo")
 	quit(0)
