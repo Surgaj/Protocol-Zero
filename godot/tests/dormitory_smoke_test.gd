@@ -42,8 +42,12 @@ func _run() -> void:
 			return
 
 	var panel: Control = czi.get_node_or_null("GreyboxUI/FourBedsChoice") as Control
+	var chapter_end: Control = czi.get_node_or_null("GreyboxUI/ChapterEnd") as Control
 	if panel == null or panel.find_child("Choice_Maya", true, false) == null or panel.find_child("Choice_Elias", true, false) == null:
 		_fail("UI de escolha das quatro camas incompleta")
+		return
+	if chapter_end == null or chapter_end.find_child("ChapterEndTitle", true, false) == null or chapter_end.find_child("ChapterEndSubtitle", true, false) == null:
+		_fail("marcador de fim de capítulo ausente")
 		return
 
 	czi.call("apply_power_stage_for_test", 3)
@@ -65,5 +69,5 @@ func _run() -> void:
 		_fail("escolha de cama não criou relação/memória social")
 		return
 
-	print("DORMITORY SMOKE PASS: grupo formado + 4 camas + 5 pessoas + memória + consequência espacial")
+	print("DORMITORY SMOKE PASS: grupo formado + 4 camas + 5 pessoas + memória + consequência espacial + fim de capítulo")
 	quit(0)
