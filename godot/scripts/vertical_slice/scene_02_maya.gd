@@ -272,13 +272,13 @@ func _resolve_choice(choice: String) -> void:
 	match choice:
 		"generator":
 			maya_target = Vector3(-0.2, 0.90, -1.0)
-			status_label.text = "Gerador estabilizado. Maya permanece perto.\nOBJETIVO: siga para o CZI-07."
+			status_label.text = "Gerador estabilizado.\nOBJETIVO: siga pela rota para o CZI-07."
 		"signal":
 			maya_target = Vector3(-2.55, 0.90, -2.65)
-			status_label.text = "Sinal priorizado. Maya volta ao gerador sem esperar.\nOBJETIVO: siga para o CZI-07."
+			status_label.text = "Posição confirmada. Gerador em sobrecarga.\nOBJETIVO: siga pela rota para o CZI-07."
 		"ignored":
 			maya_target = Vector3(-2.15, 0.90, -2.20)
-			status_label.text = "Maya resolveu o problema sozinha.\nOBJETIVO: siga para o CZI-07."
+			status_label.text = "Circuito estabilizado.\nOBJETIVO: siga pela rota para o CZI-07."
 
 func apply_choice_for_test(choice: String) -> void:
 	_resolve_choice(choice)
@@ -288,4 +288,4 @@ func _on_exit_entered(body: Node3D) -> void:
 		return
 	if not choice_resolved:
 		_resolve_choice("ignored")
-	get_tree().change_scene_to_file("res://scenes/vertical_slice/scene_03_czi_approach.tscn")
+	get_tree().change_scene_to_file("res://scenes/vertical_slice/scene_02b_journey.tscn")
