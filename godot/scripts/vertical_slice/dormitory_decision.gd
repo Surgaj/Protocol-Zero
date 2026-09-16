@@ -3,6 +3,7 @@ extends Node
 # PROTOCOL ZERO — Milestone 0.5 / Quatro Camas.
 # Vive DENTRO do CZI-07 persistente: sem troca de cena.
 # Só dispara quando a Jornada realmente formou o grupo de cinco.
+# Passo de comunicação: instrução concreta + âncora visual no espaço improvisado.
 
 var root_scene: Node3D
 var dormitory_room: Node3D
@@ -11,11 +12,13 @@ var virtual_stick: Control
 var objective_label: Label
 var status_label: Label
 var choice_panel: ColorRect
+var floor_mat_visual: MeshInstance3D
 
 var group_markers: Dictionary = {}
 var group_revealed: bool = false
 var decision_started: bool = false
 var decision_resolved: bool = false
+var _pulse_time: float = 0.0
 
 const CITIZEN_ORDER: Array[String] = ["elias", "maya", "iris", "dante", "noah"]
 const BED_POSITIONS: Array[Vector3] = [
@@ -57,7 +60,15 @@ func _late_ready() -> void:
 	_build_choice_ui()
 	set_process(true)
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_pulse_time += delta
+	if floor_mat_visual != null:
+		if decision_started and not decision_resolved:
+			var pulse: float = 1.0 + (sin(_pulse_time * 4.0) + 1.0) * 0.045
+			floor_mat_visual.scale = Vector3(pulse, 1.0, pulse)
+		else:
+			floor_mat_visual.scale = Vector3.ONE
+
 	if root_scene == null or decision_resolved:
 		return
 	var power_complete: bool = bool(root_scene.get("power_complete"))
@@ -68,7 +79,7 @@ func _process(_delta: float) -> void:
 		_reveal_group_at_entry()
 	if power_complete and String(root_scene.get("current_zone")) == "dormitory":
 		if status_label != null and not decision_started:
-			status_label.text = "DORMITÓRIO // 4 CAMAS // 5 PESSOAS"
+			status_label.text = "DORMITÓRIO // 4 CAMAS // 5 PESSOAS // 1 VAI PARA O CHÃO"
 		if not decision_started:
 			decision_started = true
 			_begin_decision()
@@ -118,7 +129,7 @@ func _build_beds() -> void:
 		_add_static_box("Bed%02d" % (i + 1), Vector3(1.45, 0.28, 0.78), bed_pos, frame_color)
 		_add_visual_box(dormitory_room, "Mattress%02d" % (i + 1), Vector3(1.28, 0.10, 0.66), bed_pos + Vector3(0, 0.19, 0), mattress_color)
 
-	_add_visual_box(dormitory_room, "ImprovisedFloorMat", Vector3(1.55, 0.05, 0.82), FLOOR_POSITION, Color("5a5547"))
+	floor_mat_visual = _add_visual_box(dormitory_room, "ImprovisedFloorMat", Vector3(1.55, 0.05, 0.82), FLOOR_POSITION, Color("8a5e3b"))
 
 func _build_group_markers() -> void:
 	var start_positions: Dictionary = {
@@ -154,9 +165,9 @@ func _build_choice_ui() -> void:
 	choice_panel = ColorRect.new()
 	choice_panel.name = "FourBedsChoice"
 	choice_panel.anchor_left = 0.08
-	choice_panel.anchor_top = 0.16
+	choice_panel.anchor_top = 0.12
 	choice_panel.anchor_right = 0.92
-	choice_panel.anchor_bottom = 0.84
+	choice_panel.anchor_bottom = 0.88
 	choice_panel.color = Color(0.035, 0.035, 0.035, 0.96)
 	choice_panel.visible = false
 	layer.add_child(choice_panel)
@@ -168,7 +179,7 @@ func _build_choice_ui() -> void:
 	column.offset_top = 20.0
 	column.offset_right = -22.0
 	column.offset_bottom = -20.0
-	column.add_theme_constant_override("separation", 9)
+	column.add_theme_constant_override("separation", 8)
 	choice_panel.add_child(column)
 
 	var title := Label.new()
@@ -178,17 +189,26 @@ func _build_choice_ui() -> void:
 	column.add_child(title)
 
 	var question := Label.new()
-	question.text = "Quem dorme no chão?"
+	question.text = "Uma pessoa terá de dormir no chão."
 	question.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	question.add_theme_font_size_override("font_size", 17)
 	column.add_child(question)
 
+	var instruction := Label.new()
+	instruction.name = "ChoiceInstruction"
+	instruction.text = "Toque no NOME de quem ficará no espaço improvisado."
+	instruction.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	instruction.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	instruction.custom_minimum_size = Vector2(0, 48)
+	instruction.add_theme_font_size_override("font_size", 15)
+	column.add_child(instruction)
+
 	for citizen_id: String in CITIZEN_ORDER:
 		var button := Button.new()
 		button.name = "Choice_%s" % citizen_id.capitalize()
-		button.text = citizen_id.to_upper()
+		button.text = "%s DORME NO CHÃO" % citizen_id.to_upper()
 		button.custom_minimum_size = Vector2(0, 50)
-		button.add_theme_font_size_override("font_size", 18)
+		button.add_theme_font_size_override("font_size", 17)
 		button.pressed.connect(_resolve_sleep_choice.bind(citizen_id))
 		column.add_child(button)
 
@@ -201,7 +221,7 @@ func _reveal_group_at_entry() -> void:
 func _begin_decision() -> void:
 	_move_group_into_dormitory()
 	if status_label != null:
-		status_label.text = "4 CAMAS // 5 PESSOAS"
+		status_label.text = "4 CAMAS // 5 PESSOAS // ESCOLHA QUEM DORME NO CHÃO"
 	await get_tree().create_timer(1.55).timeout
 	if decision_resolved:
 		return
@@ -243,7 +263,7 @@ func _resolve_sleep_choice(citizen_id: String) -> void:
 	if objective_label != null:
 		objective_label.text = "CZI-07 — DORMITÓRIO"
 	if status_label != null:
-		status_label.text = "ALOCAÇÃO DEFINIDA // 4 CAMAS + 1 ESPAÇO IMPROVISADO"
+		status_label.text = "%s DORMIRÁ NO CHÃO // DECISÃO REGISTRADA" % citizen_id.to_upper()
 
 func _apply_assignment_visuals(floor_id: String) -> void:
 	var previous: Node = dormitory_room.get_node_or_null("SleepAssignmentVisuals")
