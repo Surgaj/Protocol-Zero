@@ -1,7 +1,7 @@
 extends Node3D
 
-# PROTOCOL ZERO — Milestone 0.3 / Cena 3 greybox
-# Prova visual: Maya lê relação/memória persistida e muda distância, espera e iniciativa.
+# PROTOCOL ZERO — Cena 3 / aproximação do CZI-07.
+# Maya mantém comportamento relacional; o grupo formado na Jornada chega junto e espera na entrada.
 
 var player: CharacterBody3D
 var maya: CharacterBody3D
@@ -9,6 +9,7 @@ var gameplay_camera: Camera3D
 var virtual_stick: Control
 var objective_label: Label
 var status_label: Label
+var group_markers: Dictionary = {}
 
 func _ready() -> void:
 	GameState.ensure_new_run()
@@ -16,11 +17,28 @@ func _ready() -> void:
 	_build_approach()
 	player = _build_player()
 	maya = _build_maya()
+	_build_recruited_group()
 	gameplay_camera = _build_camera(player)
 	player.call("set_movement_camera", gameplay_camera)
 	maya.call("configure", player, Vector3(-0.9, 0.90, -5.0), Vector3(-1.65, 0.90, -5.15))
 	_build_ui()
 	_build_entry_trigger()
+
+func _process(delta: float) -> void:
+	if player == null:
+		return
+	var offsets: Dictionary = {
+		"iris": Vector3(1.25, 0.0, 1.8),
+		"dante": Vector3(-1.55, 0.0, 2.7),
+		"noah": Vector3(1.60, 0.0, 2.9),
+	}
+	for citizen_id: String in group_markers.keys():
+		var marker: Node3D = group_markers[citizen_id] as Node3D
+		var target: Vector3 = player.global_position + (offsets[citizen_id] as Vector3)
+		target.y = 0.90
+		# Os três param do lado de fora; Elias é quem cruza o limiar primeiro.
+		target.z = maxf(target.z, -4.55)
+		marker.global_position = marker.global_position.move_toward(target, delta * 2.5)
 
 func _make_material(color: Color) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
@@ -121,6 +139,39 @@ func _build_maya() -> CharacterBody3D:
 	body.add_child(collision)
 	return body
 
+func _build_recruited_group() -> void:
+	var starts: Dictionary = {
+		"iris": Vector3(1.25, 0.90, 3.5),
+		"dante": Vector3(-1.5, 0.90, 4.2),
+		"noah": Vector3(1.6, 0.90, 4.4),
+	}
+	for citizen_id: String in ["iris", "dante", "noah"]:
+		if not GameState.is_party_member(citizen_id):
+			continue
+		var marker := Node3D.new()
+		marker.name = "%s_GroupMarker" % citizen_id.capitalize()
+		marker.position = starts[citizen_id] as Vector3
+		add_child(marker)
+		var mesh_instance := MeshInstance3D.new()
+		var mesh := CapsuleMesh.new()
+		mesh.radius = 0.29
+		mesh.height = 1.70
+		mesh.material = _make_material(_citizen_color(citizen_id))
+		mesh_instance.mesh = mesh
+		marker.add_child(mesh_instance)
+		group_markers[citizen_id] = marker
+
+func _citizen_color(citizen_id: String) -> Color:
+	match citizen_id:
+		"iris":
+			return Color("c79e76")
+		"dante":
+			return Color("b5502a")
+		"noah":
+			return Color("8d8a62")
+		_:
+			return Color("aaaaaa")
+
 func _build_camera(target_player: CharacterBody3D) -> Camera3D:
 	var camera := Camera3D.new()
 	camera.name = "GreyboxCamera"
@@ -155,7 +206,7 @@ func _build_ui() -> void:
 	panel.add_child(objective_label)
 	status_label = Label.new()
 	status_label.position = Vector2(20, 44)
-	status_label.text = "OBJETIVO: alcance a entrada do CZI-07."
+	status_label.text = "OBJETIVO: entre primeiro e avalie o interior.\nO grupo aguardará na entrada."
 	status_label.add_theme_font_size_override("font_size", 15)
 	panel.add_child(status_label)
 	virtual_stick = Control.new()
@@ -170,8 +221,8 @@ func _build_ui() -> void:
 	layer.add_child(virtual_stick)
 
 func _build_entry_trigger() -> void:
-	# Cena 3 ainda é mundo externo. Cruzar a porta carrega o único mapa persistente do CZI-07.
-	# Depois disso, corredor/gerador/dormitório não trocam mais de cena entre si.
+	# Cena 3 ainda é mundo externo. Elias cruza sozinho; o grupo espera do lado de fora.
+	# Depois da energia voltar, o grupo entra no mapa persistente do CZI-07.
 	var area := Area3D.new()
 	area.name = "CZIEntryTrigger"
 	area.position = Vector3(0, 1.0, -5.30)
