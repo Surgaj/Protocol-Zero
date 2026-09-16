@@ -1,7 +1,7 @@
 extends SceneTree
 
 # Milestone 0.5 smoke: estrutura física + decisão + persistência.
-# Não prova clareza visual, peso emocional ou UX touch em device real.
+# Assume o grupo já formado pela Jornada; não prova clareza visual, peso emocional ou UX touch.
 
 func _initialize() -> void:
 	call_deferred("_run")
@@ -16,6 +16,8 @@ func _run() -> void:
 		_fail("autoload GameState ausente")
 		return
 	game_state.call("reset_new_game")
+	for citizen_id: String in ["maya", "iris", "dante", "noah"]:
+		game_state.call("add_party_member", citizen_id)
 
 	var packed: PackedScene = load("res://scenes/vertical_slice/czi07_base.tscn") as PackedScene
 	if packed == null:
@@ -63,5 +65,5 @@ func _run() -> void:
 		_fail("escolha de cama não criou relação/memória social")
 		return
 
-	print("DORMITORY SMOKE PASS: 4 camas + 5 pessoas + memória + consequência espacial")
+	print("DORMITORY SMOKE PASS: grupo formado + 4 camas + 5 pessoas + memória + consequência espacial")
 	quit(0)
