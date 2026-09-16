@@ -242,7 +242,7 @@ func _build_choice_ui() -> void:
 
 	var end_subtitle := Label.new()
 	end_subtitle.name = "ChapterEndSubtitle"
-	end_subtitle.text = "VERTICAL SLICE ATUAL ENCERRADO"
+	end_subtitle.text = "CAPÍTULO 2 EM BREVE"
 	end_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	end_subtitle.add_theme_font_size_override("font_size", 17)
 	end_column.add_child(end_subtitle)
