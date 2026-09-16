@@ -1,12 +1,12 @@
 extends Node
 
 # PROTOCOL ZERO — estado persistente mínimo do vertical slice.
-# Este autoload guarda relações e memórias entre cenas. Cena 3 lê estado social,
-# nunca a escolha bruta da Cena 2.
+# Guarda relações/memórias entre cenas e decisões espaciais dentro do CZI-07.
 
 var run_active: bool = false
 var turn_index: int = 0
 var citizens: Dictionary = {}
+var bunker_sleep_assignment: String = ""
 
 func ensure_new_run() -> void:
 	if not run_active:
@@ -15,6 +15,7 @@ func ensure_new_run() -> void:
 func reset_new_game() -> void:
 	run_active = true
 	turn_index = 0
+	bunker_sleep_assignment = ""
 	citizens = {
 		"elias": _citizen_record(),
 		"maya": _citizen_record(),
@@ -91,6 +92,48 @@ func record_maya_substation_choice(choice: String) -> void:
 	var memories: Array = get_memories("maya")
 	memories.append(memory)
 	turn_index += 1
+
+func record_sleep_assignment(floor_id: String) -> void:
+	ensure_new_run()
+	var valid_ids: Array[String] = ["elias", "maya", "iris", "dante", "noah"]
+	if not valid_ids.has(floor_id):
+		push_warning("GameState: cidadão inválido na alocação de camas: %s" % floor_id)
+		return
+	bunker_sleep_assignment = floor_id
+
+	if floor_id == "elias":
+		for citizen_id: String in ["maya", "iris", "dante", "noah"]:
+			var relation: Dictionary = _ensure_relation(citizen_id, "elias")
+			relation["trust"] = float(relation["trust"]) + 0.08
+			relation["warmth"] = float(relation["warmth"]) + 0.04
+			var memories: Array = get_memories(citizen_id)
+			memories.append({
+				"event": "sleep_assignment",
+				"theme": "sacrifice",
+				"intensity": 0.25,
+				"context": "Elias cedeu a própria cama para o grupo.",
+				"perceived_responsibility": "elias",
+				"turn": turn_index,
+				"choice": floor_id,
+			})
+	else:
+		var relation: Dictionary = _ensure_relation(floor_id, "elias")
+		relation["trust"] = float(relation["trust"]) - 0.08
+		relation["tension"] = float(relation["tension"]) + 0.18
+		var memories: Array = get_memories(floor_id)
+		memories.append({
+			"event": "sleep_assignment",
+			"theme": "fairness",
+			"intensity": 0.35,
+			"context": "Elias decidiu quem ficaria sem uma das quatro camas.",
+			"perceived_responsibility": "elias",
+			"turn": turn_index,
+			"choice": floor_id,
+		})
+	turn_index += 1
+
+func get_sleep_assignment() -> String:
+	return bunker_sleep_assignment
 
 func get_maya_behavior() -> Dictionary:
 	var relation: Dictionary = _ensure_relation("maya", "elias")
