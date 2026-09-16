@@ -4,6 +4,7 @@ extends Node
 # Vive DENTRO do CZI-07 persistente: sem troca de cena.
 # Só dispara quando a Jornada realmente formou o grupo de cinco.
 # Passo de comunicação: instrução concreta + âncora visual no espaço improvisado.
+# Ao fim do conteúdo atual, mostra um marcador claro de encerramento do capítulo.
 
 var root_scene: Node3D
 var dormitory_room: Node3D
@@ -12,12 +13,14 @@ var virtual_stick: Control
 var objective_label: Label
 var status_label: Label
 var choice_panel: ColorRect
+var chapter_end_panel: ColorRect
 var floor_mat_visual: MeshInstance3D
 
 var group_markers: Dictionary = {}
 var group_revealed: bool = false
 var decision_started: bool = false
 var decision_resolved: bool = false
+var chapter_end_shown: bool = false
 var _pulse_time: float = 0.0
 
 const CITIZEN_ORDER: Array[String] = ["elias", "maya", "iris", "dante", "noah"]
@@ -212,6 +215,38 @@ func _build_choice_ui() -> void:
 		button.pressed.connect(_resolve_sleep_choice.bind(citizen_id))
 		column.add_child(button)
 
+	chapter_end_panel = ColorRect.new()
+	chapter_end_panel.name = "ChapterEnd"
+	chapter_end_panel.anchor_right = 1.0
+	chapter_end_panel.anchor_bottom = 1.0
+	chapter_end_panel.color = Color(0.01, 0.01, 0.01, 1.0)
+	chapter_end_panel.visible = false
+	layer.add_child(chapter_end_panel)
+
+	var end_center := CenterContainer.new()
+	end_center.anchor_right = 1.0
+	end_center.anchor_bottom = 1.0
+	chapter_end_panel.add_child(end_center)
+
+	var end_column := VBoxContainer.new()
+	end_column.custom_minimum_size = Vector2(560, 180)
+	end_column.add_theme_constant_override("separation", 18)
+	end_center.add_child(end_column)
+
+	var end_title := Label.new()
+	end_title.name = "ChapterEndTitle"
+	end_title.text = "CAPÍTULO 1 — CONCLUÍDO"
+	end_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	end_title.add_theme_font_size_override("font_size", 28)
+	end_column.add_child(end_title)
+
+	var end_subtitle := Label.new()
+	end_subtitle.name = "ChapterEndSubtitle"
+	end_subtitle.text = "VERTICAL SLICE ATUAL ENCERRADO"
+	end_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	end_subtitle.add_theme_font_size_override("font_size", 17)
+	end_column.add_child(end_subtitle)
+
 func _reveal_group_at_entry() -> void:
 	group_revealed = true
 	for citizen_id: String in group_markers.keys():
@@ -264,6 +299,18 @@ func _resolve_sleep_choice(citizen_id: String) -> void:
 		objective_label.text = "CZI-07 — DORMITÓRIO"
 	if status_label != null:
 		status_label.text = "%s DORMIRÁ NO CHÃO // DECISÃO REGISTRADA" % citizen_id.to_upper()
+	_show_chapter_end_after_delay()
+
+func _show_chapter_end_after_delay() -> void:
+	await get_tree().create_timer(1.8).timeout
+	if chapter_end_shown:
+		return
+	chapter_end_shown = true
+	player.call("set_input_enabled", false)
+	if virtual_stick != null:
+		virtual_stick.visible = false
+	if chapter_end_panel != null:
+		chapter_end_panel.visible = true
 
 func _apply_assignment_visuals(floor_id: String) -> void:
 	var previous: Node = dormitory_room.get_node_or_null("SleepAssignmentVisuals")
