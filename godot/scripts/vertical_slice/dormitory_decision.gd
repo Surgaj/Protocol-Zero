@@ -2,7 +2,7 @@ extends Node
 
 # PROTOCOL ZERO — Milestone 0.5 / Quatro Camas.
 # Vive DENTRO do CZI-07 persistente: sem troca de cena.
-# Promessa: uma decisão social vira uma condição física visível no dormitório.
+# Só dispara quando a Jornada realmente formou o grupo de cinco.
 
 var root_scene: Node3D
 var dormitory_room: Node3D
@@ -61,11 +61,17 @@ func _process(_delta: float) -> void:
 	if root_scene == null or decision_resolved:
 		return
 	var power_complete: bool = bool(root_scene.get("power_complete"))
+	var party_complete: bool = GameState.get_party_members().size() >= 5
+	if not party_complete:
+		return
 	if power_complete and not group_revealed:
 		_reveal_group_at_entry()
-	if power_complete and String(root_scene.get("current_zone")) == "dormitory" and not decision_started:
-		decision_started = true
-		_begin_decision()
+	if power_complete and String(root_scene.get("current_zone")) == "dormitory":
+		if status_label != null and not decision_started:
+			status_label.text = "DORMITÓRIO // 4 CAMAS // 5 PESSOAS"
+		if not decision_started:
+			decision_started = true
+			_begin_decision()
 
 func _make_material(color: Color, roughness: float = 0.92) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
@@ -122,6 +128,8 @@ func _build_group_markers() -> void:
 		"noah": Vector3(1.28, 0.90, 5.15),
 	}
 	for citizen_id: String in ["maya", "iris", "dante", "noah"]:
+		if not GameState.is_party_member(citizen_id):
+			continue
 		var marker := Node3D.new()
 		marker.name = "%s_SocialMarker" % citizen_id.capitalize()
 		marker.position = start_positions[citizen_id] as Vector3
