@@ -2,7 +2,7 @@ extends Node3D
 
 # PROTOCOL ZERO — Cena 3 / aproximação do CZI-07.
 # Maya mantém comportamento relacional; o grupo formado na Jornada chega junto e espera na entrada.
-# Passo de comunicação: objetivo concreto + pulso sutil na porta, sem seta/tutorial explícito.
+# Comunicação: o jogador recebe uma ação explícita ao alcançar a porta, sem depender de inferência.
 
 var player: CharacterBody3D
 var maya: CharacterBody3D
@@ -11,6 +11,7 @@ var virtual_stick: Control
 var objective_label: Label
 var status_label: Label
 var door_light: OmniLight3D
+var entry_button: Button
 var group_markers: Dictionary = {}
 var _door_pulse_time: float = 0.0
 
@@ -204,6 +205,7 @@ func _build_ui() -> void:
 	layer.name = "GreyboxUI"
 	add_child(layer)
 	var panel := ColorRect.new()
+	panel.name = "ObjectivePanel"
 	panel.position = Vector2(24, 22)
 	panel.size = Vector2(620, 104)
 	panel.color = Color(0.04, 0.04, 0.04, 0.84)
@@ -215,7 +217,7 @@ func _build_ui() -> void:
 	panel.add_child(objective_label)
 	status_label = Label.new()
 	status_label.position = Vector2(20, 44)
-	status_label.text = "OBJETIVO: vá até a PORTA ILUMINADA do bunker CZI-07.\nElias entra primeiro; o grupo espera aqui."
+	status_label.text = "OBJETIVO: caminhe até a PORTA ILUMINADA.\nAo chegar, toque ENTRAR NO BUNKER."
 	status_label.add_theme_font_size_override("font_size", 15)
 	panel.add_child(status_label)
 	virtual_stick = Control.new()
@@ -229,9 +231,25 @@ func _build_ui() -> void:
 	virtual_stick.offset_bottom = -30.0
 	layer.add_child(virtual_stick)
 
+	entry_button = Button.new()
+	entry_button.name = "EnterBunker"
+	entry_button.text = "ENTRAR NO BUNKER"
+	entry_button.anchor_left = 1.0
+	entry_button.anchor_top = 1.0
+	entry_button.anchor_right = 1.0
+	entry_button.anchor_bottom = 1.0
+	entry_button.offset_left = -270.0
+	entry_button.offset_top = -164.0
+	entry_button.offset_right = -30.0
+	entry_button.offset_bottom = -76.0
+	entry_button.add_theme_font_size_override("font_size", 20)
+	entry_button.visible = false
+	entry_button.pressed.connect(_on_entry_button_pressed)
+	layer.add_child(entry_button)
+
 func _build_entry_trigger() -> void:
-	# Cena 3 ainda é mundo externo. Elias cruza sozinho; o grupo espera do lado de fora.
-	# Depois da energia voltar, o grupo entra no mapa persistente do CZI-07.
+	# O limiar não troca mais de cena automaticamente.
+	# Ele revela uma ação inequívoca: ENTRAR NO BUNKER.
 	var area := Area3D.new()
 	area.name = "CZIEntryTrigger"
 	area.position = Vector3(0, 1.0, -5.30)
@@ -239,12 +257,25 @@ func _build_entry_trigger() -> void:
 
 	var collision := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
-	shape.size = Vector3(1.10, 2.2, 0.70)
+	shape.size = Vector3(2.2, 2.2, 1.25)
 	collision.shape = shape
 	area.add_child(collision)
 	area.body_entered.connect(_on_czi_entry_reached)
+	area.body_exited.connect(_on_czi_entry_exited)
 
 func _on_czi_entry_reached(body: Node3D) -> void:
 	if body.name != "Elias_GreyCapsule":
+		return
+	entry_button.visible = true
+	status_label.text = "VOCÊ CHEGOU À ENTRADA.\nToque ENTRAR NO BUNKER para atravessar a porta."
+
+func _on_czi_entry_exited(body: Node3D) -> void:
+	if body.name != "Elias_GreyCapsule":
+		return
+	entry_button.visible = false
+	status_label.text = "OBJETIVO: caminhe até a PORTA ILUMINADA.\nAo chegar, toque ENTRAR NO BUNKER."
+
+func _on_entry_button_pressed() -> void:
+	if entry_button == null or not entry_button.visible:
 		return
 	get_tree().change_scene_to_file("res://scenes/vertical_slice/czi07_base.tscn")
