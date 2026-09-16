@@ -50,16 +50,23 @@ jobs:
             exit 1
           fi
 
-      - name: Run vertical slice smoke test
+      - name: Run vertical slice smoke tests
         shell: bash
         run: |
           set -o pipefail
           godot --headless --path godot --script res://tests/smoke_test.gd 2>&1 | tee smoke.log
           if grep -Eq 'SCRIPT ERROR:|Parse Error:|Failed to load script|Attempt to connect nonexistent signal|SMOKE FAIL:' smoke.log; then
-            echo 'Godot smoke diagnostics found; failing CI.'
+            echo 'Godot vertical-slice smoke diagnostics found; failing CI.'
             exit 1
           fi
           grep -q 'SMOKE PASS:' smoke.log
+
+          godot --headless --path godot --script res://tests/dormitory_smoke_test.gd 2>&1 | tee dormitory-smoke.log
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|Failed to load script|Attempt to connect nonexistent signal|DORMITORY SMOKE FAIL:' dormitory-smoke.log; then
+            echo 'Godot dormitory smoke diagnostics found; failing CI.'
+            exit 1
+          fi
+          grep -q 'DORMITORY SMOKE PASS:' dormitory-smoke.log
 
       - name: Export Web build with cache-busted asset names
         shell: bash
