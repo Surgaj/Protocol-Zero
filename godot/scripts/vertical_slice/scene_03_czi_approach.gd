@@ -2,6 +2,7 @@ extends Node3D
 
 # PROTOCOL ZERO — Cena 3 / aproximação do CZI-07.
 # Maya mantém comportamento relacional; o grupo formado na Jornada chega junto e espera na entrada.
+# Passo de comunicação: objetivo concreto + pulso sutil na porta, sem seta/tutorial explícito.
 
 var player: CharacterBody3D
 var maya: CharacterBody3D
@@ -9,7 +10,9 @@ var gameplay_camera: Camera3D
 var virtual_stick: Control
 var objective_label: Label
 var status_label: Label
+var door_light: OmniLight3D
 var group_markers: Dictionary = {}
+var _door_pulse_time: float = 0.0
 
 func _ready() -> void:
 	GameState.ensure_new_run()
@@ -25,6 +28,11 @@ func _ready() -> void:
 	_build_entry_trigger()
 
 func _process(delta: float) -> void:
+	_door_pulse_time += delta
+	if door_light != null:
+		# Âncora visual discreta: a própria luz da porta respira.
+		door_light.light_energy = 1.28 + sin(_door_pulse_time * 3.0) * 0.32
+
 	if player == null:
 		return
 	var offsets: Dictionary = {
@@ -90,11 +98,12 @@ func _build_approach() -> void:
 	_add_box("CZIDoorLeft", Vector3(0.75, 2.2, 0.36), Vector3(-0.42, 1.10, -6.05), Color("73777a"))
 	_add_box("CZIDoorRight", Vector3(0.75, 2.2, 0.36), Vector3(0.42, 1.10, -6.05), Color("73777a"))
 	_add_box("AccessPanel", Vector3(0.45, 0.85, 0.22), Vector3(-1.65, 1.15, -5.78), Color("777266"))
-	var door_light := OmniLight3D.new()
+	door_light = OmniLight3D.new()
+	door_light.name = "CZIEntryGuideLight"
 	door_light.position = Vector3(0, 2.8, -5.4)
 	door_light.light_color = Color("d0b16d")
-	door_light.light_energy = 1.2
-	door_light.omni_range = 3.8
+	door_light.light_energy = 1.28
+	door_light.omni_range = 4.2
 	add_child(door_light)
 
 func _build_player() -> CharacterBody3D:
@@ -201,12 +210,12 @@ func _build_ui() -> void:
 	layer.add_child(panel)
 	objective_label = Label.new()
 	objective_label.position = Vector2(20, 12)
-	objective_label.text = "CENA 3 — CZI-07"
+	objective_label.text = "CENA 3 — ENTRADA DO BUNKER"
 	objective_label.add_theme_font_size_override("font_size", 18)
 	panel.add_child(objective_label)
 	status_label = Label.new()
 	status_label.position = Vector2(20, 44)
-	status_label.text = "OBJETIVO: entre primeiro e avalie o interior.\nO grupo aguardará na entrada."
+	status_label.text = "OBJETIVO: vá até a PORTA ILUMINADA do bunker CZI-07.\nElias entra primeiro; o grupo espera aqui."
 	status_label.add_theme_font_size_override("font_size", 15)
 	panel.add_child(status_label)
 	virtual_stick = Control.new()
