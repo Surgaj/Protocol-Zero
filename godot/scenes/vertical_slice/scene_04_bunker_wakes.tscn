@@ -8,5 +8,5 @@ script = ExtResource("1_scene04")
 [node name="DeadInteriorFill" type="DirectionalLight3D" parent="."]
 rotation_degrees = Vector3(-55, -35, 0)
 light_color = Color(0.46, 0.50, 0.54, 1)
-light_energy = 0.32
+light_energy = 0.48
 shadow_enabled = false
