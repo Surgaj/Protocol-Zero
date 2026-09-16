@@ -1,12 +1,13 @@
 extends Node
 
 # PROTOCOL ZERO — estado persistente mínimo do vertical slice.
-# Guarda relações/memórias entre cenas e decisões espaciais dentro do CZI-07.
+# Guarda relações/memórias entre cenas, formação do grupo e decisões espaciais no CZI-07.
 
 var run_active: bool = false
 var turn_index: int = 0
 var citizens: Dictionary = {}
 var bunker_sleep_assignment: String = ""
+var party_members: Array[String] = []
 
 func ensure_new_run() -> void:
 	if not run_active:
@@ -16,6 +17,7 @@ func reset_new_game() -> void:
 	run_active = true
 	turn_index = 0
 	bunker_sleep_assignment = ""
+	party_members = ["elias"]
 	citizens = {
 		"elias": _citizen_record(),
 		"maya": _citizen_record(),
@@ -54,6 +56,20 @@ func get_memories(citizen_id: String) -> Array:
 	var citizen: Dictionary = _ensure_citizen(citizen_id)
 	return citizen["memories"] as Array
 
+func add_party_member(citizen_id: String) -> void:
+	ensure_new_run()
+	if not citizens.has(citizen_id):
+		push_warning("GameState: cidadão desconhecido no grupo: %s" % citizen_id)
+		return
+	if not party_members.has(citizen_id):
+		party_members.append(citizen_id)
+
+func is_party_member(citizen_id: String) -> bool:
+	return party_members.has(citizen_id)
+
+func get_party_members() -> Array[String]:
+	return party_members.duplicate()
+
 func record_maya_substation_choice(choice: String) -> void:
 	ensure_new_run()
 	var relation: Dictionary = _ensure_relation("maya", "elias")
@@ -91,6 +107,7 @@ func record_maya_substation_choice(choice: String) -> void:
 
 	var memories: Array = get_memories("maya")
 	memories.append(memory)
+	add_party_member("maya")
 	turn_index += 1
 
 func record_sleep_assignment(floor_id: String) -> void:
