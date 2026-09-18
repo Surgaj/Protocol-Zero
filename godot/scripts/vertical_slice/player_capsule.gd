@@ -78,3 +78,10 @@ func _camera_relative(input_vec: Vector2) -> Vector3:
 	if direction.length() > 1.0:
 		direction = direction.normalized()
 	return direction
+
+
+func _ready() -> void:
+	call_deferred("_attach_visual")
+
+func _attach_visual() -> void:
+	load("res://scripts/visual/citizen_visual.gd").attach(self, "elias")

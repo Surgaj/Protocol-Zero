@@ -78,6 +78,26 @@ jobs:
           fi
           grep -q 'DAY SMOKE PASS:' day-smoke.log
 
+      - name: Render mobile visual review captures
+        shell: bash
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          set -o pipefail
+          timeout 90 xvfb-run -a godot --path godot --rendering-method gl_compatibility --audio-driver Dummy --script res://tests/visual_capture.gd 2>&1 | tee visual.log
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|VISUAL FAIL:' visual.log; then
+            exit 1
+          fi
+          grep -q 'VISUAL PASS:' visual.log
+
+      - name: Upload visual review captures
+        uses: actions/upload-artifact@v4
+        with:
+          name: protocol-zero-visual-review
+          path: /tmp/pz-visual/*.png
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Export Web build with cache-busted asset names
         shell: bash
         run: |

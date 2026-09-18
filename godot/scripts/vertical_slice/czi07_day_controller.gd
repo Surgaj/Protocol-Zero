@@ -73,9 +73,11 @@ func start(decision: Node) -> void:
 		actor.visible = true
 		var label := Label3D.new()
 		label.text = id.capitalize()
-		label.position.y = 1.22
+		label.position.y = 1.35
 		label.font_size = 32
-		label.pixel_size = 0.009
+		label.pixel_size = 0.007
+		label.modulate = Color("e9e2d2")
+		label.outline_modulate = Color("28382f")
 		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		actor.add_child(label)
 	GameState.day_phase_changed.connect(_on_phase_changed)
@@ -134,6 +136,9 @@ func _on_phase_changed(phase: int) -> void:
 	player.set("move_speed", normal_speed * (0.92 if iris_greeting else 1.0))
 	for id: String in IDS:
 		var actor: Node3D = actors[id] as Node3D
+		var visual: Node = actor.get_node_or_null("CitizenVisual")
+		if visual != null:
+			visual.set("activity", "")
 		var target: Vector3 = target_for(id, phase)
 		if id == "iris" and iris_greeting:
 			# Aproximação antes do trabalho; aguarda uma ação, nunca um cronômetro.
@@ -163,6 +168,9 @@ func _arrived(id: String, phase: int) -> void:
 	if phase != GameState.day_phase:
 		return
 	var task: String = routine_for(id, phase)
+	var visual: Node = (actors[id] as Node3D).get_node_or_null("CitizenVisual")
+	if visual != null:
+		visual.set("activity", "" if iris_greeting and id == "iris" else task)
 	if not (id == "iris" and iris_greeting):
 		if (id == "maya" and task == "generator") or (id == "iris" and task == "supplies") or (id == "dante" and task == "entrance") or (id == "noah" and task == "communication"):
 			_leave_trace(id)

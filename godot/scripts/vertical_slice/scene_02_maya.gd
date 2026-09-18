@@ -135,6 +135,7 @@ func _build_maya() -> CharacterBody3D:
 	capsule.height = 1.78
 	collision.shape = capsule
 	body.add_child(collision)
+	load("res://scripts/visual/citizen_visual.gd").attach(body, "maya")
 	return body
 
 func _build_camera(target_player: CharacterBody3D) -> Camera3D:
@@ -289,3 +290,4 @@ func _on_exit_entered(body: Node3D) -> void:
 	if not choice_resolved:
 		_resolve_choice("ignored")
 	get_tree().change_scene_to_file("res://scenes/vertical_slice/scene_02b_journey.tscn")
+

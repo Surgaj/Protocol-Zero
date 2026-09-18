@@ -144,6 +144,7 @@ func _build_party_and_encounters() -> void:
 		mesh_instance.mesh = capsule
 		marker.add_child(mesh_instance)
 		party_markers[citizen_id] = marker
+		load("res://scripts/visual/citizen_visual.gd").attach(marker, citizen_id)
 
 func _build_camera(target_player: CharacterBody3D) -> Camera3D:
 	var camera := Camera3D.new()
@@ -380,3 +381,4 @@ func apply_encounter_for_test(citizen_id: String) -> void:
 
 func get_joined_count() -> int:
 	return joined_members.size()
+

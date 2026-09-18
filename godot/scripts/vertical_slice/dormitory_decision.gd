@@ -158,6 +158,7 @@ func _build_group_markers() -> void:
 		mesh_instance.mesh = capsule
 		marker.add_child(mesh_instance)
 		group_markers[citizen_id] = marker
+		load("res://scripts/visual/citizen_visual.gd").attach(marker, citizen_id)
 
 func _build_choice_ui() -> void:
 	var layer: CanvasLayer = root_scene.get_node_or_null("GreyboxUI") as CanvasLayer

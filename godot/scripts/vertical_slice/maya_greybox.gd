@@ -64,3 +64,10 @@ func _movement_target() -> Vector3:
 			return _door_wait_point
 
 	return target
+
+
+func _ready() -> void:
+	call_deferred("_attach_visual")
+
+func _attach_visual() -> void:
+	load("res://scripts/visual/citizen_visual.gd").attach(self, "maya")

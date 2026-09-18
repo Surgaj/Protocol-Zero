@@ -170,6 +170,7 @@ func _build_recruited_group() -> void:
 		mesh_instance.mesh = mesh
 		marker.add_child(mesh_instance)
 		group_markers[citizen_id] = marker
+		load("res://scripts/visual/citizen_visual.gd").attach(marker, citizen_id)
 
 func _citizen_color(citizen_id: String) -> Color:
 	match citizen_id:
@@ -279,3 +280,4 @@ func _on_entry_button_pressed() -> void:
 	if entry_button == null or not entry_button.visible:
 		return
 	get_tree().change_scene_to_file("res://scenes/vertical_slice/czi07_base.tscn")
+

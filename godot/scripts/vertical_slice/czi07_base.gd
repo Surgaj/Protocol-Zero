@@ -57,6 +57,10 @@ func _ready() -> void:
 	_build_ui()
 	_build_audio()
 	_build_dormitory_trigger()
+	var dressing := Node3D.new()
+	dressing.name = "BunkerDressing"
+	dressing.set_script(load("res://scripts/visual/czi07_dressing.gd"))
+	add_child(dressing)
 	set_process(true)
 
 func _process(delta: float) -> void:
@@ -185,7 +189,7 @@ func _build_lights() -> void:
 	corridor_light = OmniLight3D.new()
 	corridor_light.name = "CorridorLight"
 	corridor_light.position = Vector3(0, 2.55, -1.8)
-	corridor_light.light_color = Color("cec9b8")
+	corridor_light.light_color = Color("cad8ce")
 	corridor_light.light_energy = 0.0
 	corridor_light.omni_range = 6.5
 	corridor_light.shadow_enabled = true
@@ -194,7 +198,7 @@ func _build_lights() -> void:
 	dormitory_light = OmniLight3D.new()
 	dormitory_light.name = "DormitoryLight"
 	dormitory_light.position = Vector3(4.85, 2.15, -4.85)
-	dormitory_light.light_color = Color("c9d1c4")
+	dormitory_light.light_color = Color("ebd0a0")
 	dormitory_light.light_energy = 0.0
 	dormitory_light.omni_range = 6.5
 	dormitory_light.shadow_enabled = false
@@ -257,20 +261,28 @@ func _build_ui() -> void:
 
 	var panel := ColorRect.new()
 	panel.position = Vector2(24, 22)
-	panel.size = Vector2(620, 92)
-	panel.color = Color(0.025, 0.025, 0.025, 0.88)
+	panel.size = Vector2(672, 86)
+	panel.color = Color(0.055, 0.085, 0.07, 0.80)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var accent := ColorRect.new()
+	accent.size = Vector2(3, 86)
+	accent.color = Color("e8a33d")
+	accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(accent)
 	layer.add_child(panel)
 
 	objective_label = Label.new()
 	objective_label.position = Vector2(20, 11)
 	objective_label.text = "CZI-07 — INTERIOR"
-	objective_label.add_theme_font_size_override("font_size", 18)
+	objective_label.add_theme_font_size_override("font_size", 19)
 	panel.add_child(objective_label)
 
 	status_label = Label.new()
 	status_label.position = Vector2(20, 43)
 	status_label.text = "INTERIOR SEM ENERGIA"
-	status_label.add_theme_font_size_override("font_size", 15)
+	status_label.add_theme_font_size_override("font_size", 17)
+	status_label.size = Vector2(630, 36)
+	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	panel.add_child(status_label)
 
 	virtual_stick = Control.new()
