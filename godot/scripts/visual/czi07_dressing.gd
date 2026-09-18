@@ -5,6 +5,7 @@ var bunker: Node3D
 var rotor: Node3D
 var fixtures: Array[MeshInstance3D] = []
 var cached_power: bool = false
+var cutaway_meshes: Array[MeshInstance3D] = []
 const STEEL: Color = Color("555c57")
 const DARK: Color = Color("323c3b")
 const PAPER: Color = Color("e9e2d2")
@@ -61,6 +62,10 @@ func _sign(name_: String, copy: String, pos: Vector3, size: int = 48) -> Label3D
 
 func _build() -> void:
 	_dress_structure()
+	for wall_path: String in ["Geometry/DormitoryRoom/DormitoryPartitionRear", "Geometry/DormitoryRoom/DormitoryBackWall"]:
+		cutaway_meshes.append(bunker.get_node(wall_path).get_child(0) as MeshInstance3D)
+	# The foreground lintel is retained physically, removed only from the cutaway view.
+	(bunker.get_node("Geometry/EntranceHall/EntryLintel").get_child(0) as MeshInstance3D).visible = false
 	_dress_generator()
 	_dress_entry()
 	_dress_corridor()
@@ -131,11 +136,11 @@ func _dress_generator() -> void:
 	_fixture(Vector3(-2.54, 2.10, -8.2), true)
 
 func _dress_entry() -> void:
-	_box("DoorFrame", Vector3(3.5, 2.75, 0.16), Vector3(0, 1.38, 7.31), DARK)
-	for x: float in [-0.83, 0.83]:
-		_box("EntranceDoor", Vector3(1.5, 2.40, 0.11), Vector3(x, 1.29, 7.17), Color("657065"))
-		_box("DoorBrace", Vector3(1.36, 0.13, 0.08), Vector3(x, 0.80, 7.07), Color("92947c"))
-		_box("DoorWindow", Vector3(0.52, 0.39, 0.045), Vector3(x, 1.84, 7.08), Color("283b37"))
+	# Open doors retract to the sides: the camera must see the arrival group.
+	for x: float in [-2.30, 2.30]:
+		_box("EntranceDoor", Vector3(0.52, 2.40, 0.11), Vector3(x, 1.29, 7.17), Color("657065"))
+		_box("DoorBrace", Vector3(0.48, 0.13, 0.08), Vector3(x, 0.80, 7.07), Color("92947c"))
+		_box("DoorWindow", Vector3(0.28, 0.39, 0.045), Vector3(x, 1.84, 7.08), Color("283b37"))
 	_box("Threshold", Vector3(3.4, 0.045, 0.45), Vector3(0, 0.025, 6.92), Color("9a895e"))
 	# Front-facing sign for the established isometric camera.
 	_sign("BunkerIdentity", "CZI—07", Vector3(-1.6, 2.7, 4.7), 45).rotation_degrees.y = 35
@@ -189,6 +194,13 @@ func _dress_dormitory() -> void:
 	_sign("DormWallSign", "REPOUSO", Vector3(4.7, 2.25, -7.66), 34)
 
 func _process(delta: float) -> void:
+	if bunker != null:
+		var player: Node3D = bunker.get("player") as Node3D
+		var reveal_generator: bool = player != null and player.position.x < 2.9 and player.position.z < -5.6
+		for wall: MeshInstance3D in cutaway_meshes:
+			# Mesh-only cutaway; the approved collision stays untouched.
+			wall.scale.y = 0.23 if reveal_generator else 1.0
+			wall.position.y = -1.1935 if reveal_generator else 0.0
 	var power: bool = bool(bunker.get("power_complete")) if bunker != null else false
 	if power and rotor != null:
 		rotor.rotation.z += delta * 1.1
