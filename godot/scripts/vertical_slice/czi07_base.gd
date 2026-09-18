@@ -61,6 +61,10 @@ func _ready() -> void:
 	dressing.name = "BunkerDressing"
 	dressing.set_script(load("res://scripts/visual/czi07_dressing.gd"))
 	add_child(dressing)
+	var wing := Node3D.new()
+	wing.name = "ServiceWing"
+	wing.set_script(load("res://scripts/survival/service_wing.gd"))
+	add_child(wing)
 	set_process(true)
 
 func _process(delta: float) -> void:
@@ -143,7 +147,8 @@ func _build_bunker_layout() -> void:
 	# Corredor principal. A parede direita é interrompida por uma passagem REAL para o dormitório.
 	_add_static_box("CorridorFloor", Vector3(6.0, 0.30, 10.0), Vector3(0, -0.15, -1.5), floor_color, main_corridor)
 	_add_static_box("CorridorLeftWall", Vector3(0.32, 3.4, 10.0), Vector3(-2.84, 1.70, -1.5), wall_color, main_corridor)
-	_add_static_box("CorridorRightLipFront", Vector3(0.32, 0.68, 6.4), Vector3(2.84, 0.34, 0.3), lip_color, main_corridor)
+	_add_static_box("CorridorRightLipFront", Vector3(0.32, 0.68, 3.3), Vector3(2.84, 0.34, -1.25), lip_color, main_corridor)
+	_add_static_box("ServiceDoorFrontLip", Vector3(0.32, 0.68, 1.5), Vector3(2.84, 0.34, 2.75), lip_color, main_corridor)
 	_add_static_box("CorridorRightLipRear", Vector3(0.32, 0.68, 2.0), Vector3(2.84, 0.34, -5.5), lip_color, main_corridor)
 	_add_static_box("DormDoorPostFront", Vector3(0.32, 2.55, 0.18), Vector3(2.84, 1.275, -2.98), steel_color, main_corridor)
 	_add_static_box("DormDoorPostRear", Vector3(0.32, 2.55, 0.18), Vector3(2.84, 1.275, -4.42), steel_color, main_corridor)
@@ -355,7 +360,7 @@ func _refresh_generator_proximity() -> void:
 		_refresh_status_for_zone()
 
 func _refresh_status_for_zone() -> void:
-	if GameState.day == 1:
+	if GameState.day >= 1:
 		return
 	if status_label == null:
 		return

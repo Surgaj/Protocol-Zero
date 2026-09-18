@@ -4,6 +4,8 @@ extends Node
 # Guarda relações/memórias entre cenas, formação do grupo e decisões espaciais no CZI-07.
 
 signal day_phase_changed(phase: int)
+const SurvivalState = preload("res://scripts/survival/survival_state.gd")
+var survival: SurvivalState = SurvivalState.new()
 
 const DAY_PHASES: Array[String] = ["MANHÃ", "MEIO DA MANHÃ", "MEIO-DIA", "TARDE", "FIM DE TARDE", "NOITE"]
 const DAY_OBJECTS: Array[String] = ["generator", "supplies", "entrance", "communication"]
@@ -30,6 +32,7 @@ func ensure_new_run() -> void:
 		reset_new_game()
 
 func reset_new_game() -> void:
+	survival = SurvivalState.new()
 	day = 0
 	day_phase = 0
 	last_time_source = ""
@@ -208,12 +211,14 @@ func start_day() -> bool:
 	return true
 
 func is_significant_source(source_id: String) -> bool:
+	if survival.active and source_id in ["area:services", "area:pantry", "object:reservoir", "object:kitchen", "object:table", "object:power"]:
+		return true
 	if source_id.begins_with("observe:"):
 		return ["maya", "iris", "dante", "noah"].has(source_id.trim_prefix("observe:"))
 	return source_id.begins_with("object:") and DAY_OBJECTS.has(source_id.trim_prefix("object:"))
 
 func advance_time(source_id: String) -> bool:
-	if day != 1 or not is_significant_source(source_id) or source_id == last_time_source:
+	if day < 1 or survival.game_over or not is_significant_source(source_id) or source_id == last_time_source:
 		return false
 	if day_phase >= DAY_PHASES.size() - 1:
 		# À noite, outra ação resolve ignorar sem inventar uma sétima fase.
@@ -221,8 +226,15 @@ func advance_time(source_id: String) -> bool:
 			resolve_cough(false)
 			last_time_source = source_id
 		return false
+	# Validate and apply unlocks atomically before time/consumption changes.
+	if source_id.begins_with("area:") and not survival.unlock(source_id.trim_prefix("area:")):
+		return false
+	if source_id == "object:power":
+		survival.powered = not survival.powered
 	last_time_source = source_id
 	day_phase += 1
+	if survival.active:
+		survival.step(day, day_phase)
 	day_phase_changed.emit(day_phase)
 	return true
 
@@ -236,3 +248,17 @@ func resolve_cough(checked: bool) -> void:
 	checked_cough = checked
 	cough_pending = false
 	cough_resolved = true
+
+func sleep_to_next_day() -> bool:
+	if day < 1 or day_phase != 5 or survival.game_over:
+		return false
+	if day == 1 and not cough_resolved:
+		return false
+	if not survival.active:
+		survival.start()
+	day += 1
+	day_phase = 0
+	last_time_source = "rest"
+	survival.step(day, day_phase)
+	day_phase_changed.emit(day_phase)
+	return true

@@ -78,6 +78,16 @@ jobs:
           fi
           grep -q 'DAY SMOKE PASS:' day-smoke.log
 
+      - name: Run survival and area unlock integration tests
+        shell: bash
+        run: |
+          set -o pipefail
+          timeout 90 godot --headless --path godot --script res://tests/survival_smoke_test.gd 2>&1 | tee survival.log
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|SURVIVAL FAIL:' survival.log; then
+            exit 1
+          fi
+          grep -q 'SURVIVAL PASS:' survival.log
+
       - name: Render mobile visual review captures
         shell: bash
         env:

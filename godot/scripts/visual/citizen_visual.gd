@@ -14,6 +14,10 @@ var stride: float = 0.0
 var clock: float = 0.0
 var walking: float = 0.0
 var activity: String = ""
+var weakened: bool = false
+var bottle: MeshInstance3D
+var bowl: MeshInstance3D
+var spoon: MeshInstance3D
 
 static func attach(actor: Node3D, id: String) -> void:
 	if actor.has_node("CitizenVisual"):
@@ -126,6 +130,12 @@ func _build_person() -> void:
 			_box(left_arm, "Receiver", Vector3(0.18, 0.24, 0.075), Vector3(0.01, -0.40, 0.13), dark)
 			_box(left_arm, "ReceiverScreen", Vector3(0.12, 0.10, 0.012), Vector3(0.01, -0.36, 0.175), Color("c4b57c"))
 			model.rotation.x = 0.04
+	bottle = _box(right_arm, "DrinkingBottle", Vector3(0.11, 0.23, 0.11), Vector3(0, -0.44, 0.11), Color("7e9c9d"))
+	bowl = _round(left_arm, "MealBowl", 0.14, 0.13, Vector3(0, -0.45, 0.12), Color("c7b381"))
+	spoon = _box(right_arm, "Spoon", Vector3(0.025, 0.22, 0.035), Vector3(0, -0.47, 0.1), Color("c6c7ad"))
+	bottle.visible = false
+	bowl.visible = false
+	spoon.visible = false
 	# Low cost contact shadow, no extra shadow-casting lights.
 	var shadow := CylinderMesh.new()
 	shadow.top_radius = 0.36
@@ -155,6 +165,51 @@ func _process(delta: float) -> void:
 	left_arm.rotation.x = -sin(stride) * 0.32 * walking
 	right_arm.rotation.x = sin(stride) * 0.32 * walking
 	model.position.y = absf(sin(stride)) * 0.032 * walking + sin(clock * 1.8) * 0.006
-	if walking < 0.05 and not activity.is_empty() and activity != "rest":
-		right_arm.rotation.x = -0.65 + sin(clock * 2.5) * 0.10
-		left_arm.rotation.x = -0.3
+	model.rotation.z = 0.0
+	model.rotation.x = 0.09 if weakened else (0.04 if citizen_id == "noah" else 0.0)
+	bottle.visible = activity == "drink" and walking < 0.05
+	bowl.visible = activity == "eat" and walking < 0.05
+	spoon.visible = bowl.visible
+	var wrench: Node = right_arm.get_node_or_null("WrenchHandle")
+	if wrench != null:
+		(wrench as Node3D).visible = activity in ["generator", "pump"]
+		(right_arm.get_node("WrenchHead") as Node3D).visible = (wrench as Node3D).visible
+	if activity == "dead":
+		model.rotation.z = 1.5
+		model.position.y = -0.65
+		return
+	if walking < 0.05:
+		match activity:
+			"generator", "pump":
+				right_arm.rotation.x = -0.85 + sin(clock * 3) * 0.28
+				left_arm.rotation.x = -0.55
+				model.rotation.x = 0.12
+			"cook":
+				right_arm.rotation.x = -0.95 + sin(clock * 2.5) * 0.12
+				right_arm.rotation.z = sin(clock * 2.5) * 0.15
+				left_arm.rotation.x = -0.55
+			"supplies":
+				model.rotation.x = 0.20 + sin(clock * 1.5) * 0.07
+				right_arm.rotation.x = -0.75
+				left_arm.rotation.x = -0.60 + sin(clock * 2) * 0.22
+			"entrance":
+				model.position.y -= 0.18 * maxf(0, sin(clock * 0.8))
+				model.rotation.x = 0.22 * maxf(0, sin(clock * 0.8))
+				left_leg.rotation.x = -0.3
+			"communication":
+				left_arm.rotation.x = -1.0
+				right_arm.rotation.x = -0.9 + sin(clock * 4) * 0.07
+			"eat":
+				left_arm.rotation.x = -1.0
+				right_arm.rotation.x = -1.4 + sin(clock * 2) * 0.50
+			"drink":
+				right_arm.rotation.x = -2.3 + sin(clock * 1.2) * 0.15
+			"recover", "rest":
+				model.position.y -= 0.25
+				left_leg.rotation.x = -0.75
+				right_leg.rotation.x = -0.75
+				model.rotation.x = 0.13
+			"empty_pot", "empty_table", "power_wait":
+				model.rotation.x = 0.12
+	if activity != "cook":
+		right_arm.rotation.z = 0.0

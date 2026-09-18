@@ -202,6 +202,7 @@ func _process(delta: float) -> void:
 			wall.scale.y = 0.23 if reveal_generator else 1.0
 			wall.position.y = -1.1935 if reveal_generator else 0.0
 	var power: bool = bool(bunker.get("power_complete")) if bunker != null else false
+	power = power and (not GameState.survival.active or GameState.survival.powered)
 	if power and rotor != null:
 		rotor.rotation.z += delta * 1.1
 	if power != cached_power:

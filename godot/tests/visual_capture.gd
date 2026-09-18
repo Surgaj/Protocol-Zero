@@ -70,6 +70,26 @@ func _run() -> void:
 	await create_timer(0.8).timeout
 	await RenderingServer.frame_post_draw
 	root.get_texture().get_image().save_png("/tmp/pz-visual/mobile-gameplay.png")
+	# Continue into the real survival extension for visual review.
+	state.set("day_phase", 5)
+	state.set("cough_resolved", true)
+	state.call("sleep_to_next_day")
+	for motion: Tween in day.get("motions"):
+		motion.custom_step(12.0)
+	player.position = Vector3(1.9, 0.9, 1.2)
+	day.call("use_survival_action", "area:services")
+	for motion: Tween in day.get("motions"):
+		motion.custom_step(12.0)
+	camera.set_process(false)
+	camera.set_physics_process(false)
+	await _capture(camera, "services-cooking", Vector3(5.5, 0.8, 1.0), 8.5)
+	player.position = Vector3(7.2, 0.9, 1.2)
+	day.call("use_survival_action", "area:pantry")
+	for motion: Tween in day.get("motions"):
+		motion.custom_step(12.0)
+	await _capture(camera, "services-meal", Vector3(6.2, 0.8, 1.0), 9.4)
+	player.position = Vector3(10.1, 0.9, 1.4)
+	await _capture(camera, "pantry-open", Vector3(10.0, 0.8, 1.0), 7.8)
 	if failures == 0:
 		print("VISUAL PASS: character identities + cosmetic-only geometry + five rendered views")
 	quit(0 if failures == 0 else 1)
