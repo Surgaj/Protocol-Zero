@@ -46,8 +46,12 @@ func _run() -> void:
 	if panel == null or panel.find_child("Choice_Maya", true, false) == null or panel.find_child("Choice_Elias", true, false) == null:
 		_fail("UI de escolha das quatro camas incompleta")
 		return
-	if chapter_end == null or chapter_end.find_child("ChapterEndTitle", true, false) == null or chapter_end.find_child("ChapterEndSubtitle", true, false) == null:
+	if chapter_end == null or chapter_end.find_child("ChapterEndTitle", true, false) == null:
 		_fail("marcador de fim de capítulo ausente")
+		return
+
+	if chapter_end.find_child("ChapterEndTitle", true, false).text != "FIM DO CAPÍTULO 1" or chapter_end.find_child("ChapterEndSubtitle", true, false) != null:
+		_fail("fim de capítulo contém texto extra")
 		return
 
 	czi.call("apply_power_stage_for_test", 3)
@@ -71,3 +75,4 @@ func _run() -> void:
 
 	print("DORMITORY SMOKE PASS: grupo formado + 4 camas + 5 pessoas + memória + consequência espacial + fim de capítulo")
 	quit(0)
+

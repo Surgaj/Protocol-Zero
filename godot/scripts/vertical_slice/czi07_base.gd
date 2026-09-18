@@ -343,6 +343,8 @@ func _refresh_generator_proximity() -> void:
 		_refresh_status_for_zone()
 
 func _refresh_status_for_zone() -> void:
+	if GameState.day == 1:
+		return
 	if status_label == null:
 		return
 	if power_started and not power_complete:
@@ -448,7 +450,8 @@ func _complete_power_sequence() -> void:
 	power_complete = true
 	_apply_power_stage(3)
 	_drone_target_gain = 0.14
-	objective_label.text = "CZI-07 — INTERIOR"
+	if GameState.day == 0:
+		objective_label.text = "CZI-07 — INTERIOR"
 	_refresh_status_for_zone()
 	player.call("set_input_enabled", true)
 	virtual_stick.visible = true
@@ -457,14 +460,16 @@ func _on_dormitory_entered(body: Node3D) -> void:
 	if body.name != "Elias_GreyCapsule":
 		return
 	current_zone = "dormitory"
-	objective_label.text = "CZI-07 — DORMITÓRIO"
+	if GameState.day == 0:
+		objective_label.text = "CZI-07 — DORMITÓRIO"
 	_refresh_status_for_zone()
 
 func _on_dormitory_exited(body: Node3D) -> void:
 	if body.name != "Elias_GreyCapsule":
 		return
 	current_zone = "interior"
-	objective_label.text = "CZI-07 — INTERIOR"
+	if GameState.day == 0:
+		objective_label.text = "CZI-07 — INTERIOR"
 	_refresh_status_for_zone()
 
 func apply_power_stage_for_test(stage: int) -> void:
@@ -473,3 +478,4 @@ func apply_power_stage_for_test(stage: int) -> void:
 	if stage >= 3:
 		power_complete = true
 		_refresh_status_for_zone()
+

@@ -235,17 +235,11 @@ func _build_choice_ui() -> void:
 
 	var end_title := Label.new()
 	end_title.name = "ChapterEndTitle"
-	end_title.text = "CAPÍTULO 1 — CONCLUÍDO"
+	end_title.text = "FIM DO CAPÍTULO 1"
 	end_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	end_title.add_theme_font_size_override("font_size", 28)
 	end_column.add_child(end_title)
 
-	var end_subtitle := Label.new()
-	end_subtitle.name = "ChapterEndSubtitle"
-	end_subtitle.text = "CAPÍTULO 2 EM BREVE"
-	end_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	end_subtitle.add_theme_font_size_override("font_size", 17)
-	end_column.add_child(end_subtitle)
 
 func _reveal_group_at_entry() -> void:
 	group_revealed = true
@@ -311,6 +305,17 @@ func _show_chapter_end_after_delay() -> void:
 		virtual_stick.visible = false
 	if chapter_end_panel != null:
 		chapter_end_panel.visible = true
+	# Cartela apenas com o título; a manhã continua no MESMO mapa.
+	await get_tree().create_timer(2.5).timeout
+	chapter_end_panel.visible = false
+	player.call("set_input_enabled", true)
+	if virtual_stick != null:
+		virtual_stick.visible = true
+	var controller := Node.new()
+	controller.name = "CZI07DayController"
+	controller.set_script(load("res://scripts/vertical_slice/czi07_day_controller.gd"))
+	root_scene.add_child(controller)
+	controller.call("start", self)
 
 func _apply_assignment_visuals(floor_id: String) -> void:
 	var previous: Node = dormitory_room.get_node_or_null("SleepAssignmentVisuals")
@@ -362,3 +367,4 @@ func _citizen_color(citizen_id: String) -> Color:
 
 func apply_sleep_choice_for_test(citizen_id: String) -> void:
 	_resolve_sleep_choice(citizen_id)
+

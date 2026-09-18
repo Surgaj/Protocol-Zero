@@ -3,6 +3,22 @@ extends Node
 # PROTOCOL ZERO — estado persistente mínimo do vertical slice.
 # Guarda relações/memórias entre cenas, formação do grupo e decisões espaciais no CZI-07.
 
+signal day_phase_changed(phase: int)
+
+const DAY_PHASES: Array[String] = ["MANHÃ", "MEIO DA MANHÃ", "MEIO-DIA", "TARDE", "FIM DE TARDE", "NOITE"]
+const DAY_OBJECTS: Array[String] = ["generator", "supplies", "entrance", "communication"]
+var day: int = 0
+var day_phase: int = 0
+var last_time_source: String = ""
+var day_traces: Dictionary = {}
+var cough_pending: bool = false
+var cough_resolved: bool = false
+var checked_cough: bool = false
+# Alias: a decisão aprovada continua tendo uma única fonte de verdade.
+var sleep_assignment: String:
+	get:
+		return bunker_sleep_assignment
+
 var run_active: bool = false
 var turn_index: int = 0
 var citizens: Dictionary = {}
@@ -14,6 +30,13 @@ func ensure_new_run() -> void:
 		reset_new_game()
 
 func reset_new_game() -> void:
+	day = 0
+	day_phase = 0
+	last_time_source = ""
+	day_traces.clear()
+	cough_pending = false
+	cough_resolved = false
+	checked_cough = false
 	run_active = true
 	turn_index = 0
 	bunker_sleep_assignment = ""
@@ -174,3 +197,42 @@ func get_maya_behavior() -> Dictionary:
 		"waits_at_doors": false,
 		"takes_initiative": false,
 	}
+
+
+func start_day() -> bool:
+	if day != 0 or bunker_sleep_assignment.is_empty():
+		return false
+	day = 1
+	day_phase = 0
+	day_phase_changed.emit(day_phase)
+	return true
+
+func is_significant_source(source_id: String) -> bool:
+	if source_id.begins_with("observe:"):
+		return ["maya", "iris", "dante", "noah"].has(source_id.trim_prefix("observe:"))
+	return source_id.begins_with("object:") and DAY_OBJECTS.has(source_id.trim_prefix("object:"))
+
+func advance_time(source_id: String) -> bool:
+	if day != 1 or not is_significant_source(source_id) or source_id == last_time_source:
+		return false
+	if day_phase >= DAY_PHASES.size() - 1:
+		# À noite, outra ação resolve ignorar sem inventar uma sétima fase.
+		if cough_pending:
+			resolve_cough(false)
+			last_time_source = source_id
+		return false
+	last_time_source = source_id
+	day_phase += 1
+	day_phase_changed.emit(day_phase)
+	return true
+
+func begin_cough() -> void:
+	if day == 1 and day_phase == DAY_PHASES.size() - 1 and not cough_resolved:
+		cough_pending = true
+
+func resolve_cough(checked: bool) -> void:
+	if not cough_pending:
+		return
+	checked_cough = checked
+	cough_pending = false
+	cough_resolved = true
