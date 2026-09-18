@@ -12,6 +12,7 @@ const POINTS: Dictionary = {
 }
 var bunker: Node3D
 var gates: Dictionary = {}
+var door_labels: Dictionary = {}
 var rooms: Dictionary = {}
 var tank_level: MeshInstance3D
 var food_crates: Array[MeshInstance3D] = []
@@ -102,6 +103,7 @@ func _door(id: String, x: float) -> void:
 	var label := Label3D.new()
 	label.name = "DoorLabel"
 	label.text = "SERVIÇOS\n2 PEÇAS" if id == "services" else "DEPÓSITO\n2 PEÇAS"
+	door_labels[id] = label
 	label.font_size = 32
 	label.pixel_size = 0.007
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -169,6 +171,10 @@ func sync_state() -> void:
 		var unlocked: bool = bool(life.areas[id])
 		gate.visible = not unlocked
 		gate.collision_layer = 0 if unlocked else 1
+		var label: Label3D = door_labels[id] as Label3D
+		label.text = "SERVIÇOS" if id == "services" else "DEPÓSITO"
+		if not unlocked:
+			label.text += "\n2 PEÇAS"
 	service_light.light_energy = 3.4 if life.areas["services"] and life.powered else 0.0
 	pantry_light.light_energy = 3.0 if life.areas["pantry"] and life.powered else 0.0
 	var ratio: float = float(life.water) / float(life.WATER_CAPACITY)
