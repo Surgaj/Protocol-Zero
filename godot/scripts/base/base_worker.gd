@@ -76,6 +76,15 @@ func _arrive() -> void:
 	velocity = Vector3.ZERO
 	var activities: Dictionary = {"WORKING": {"water": "pump", "kitchen": "cook", "workshop": "generator"}.get(station, ""), "DRINKING": "drink", "EATING": "eat", "SLEEPING": "rest", "TALKING": "communication"}
 	visual.set("activity", activities.get(state, ""))
+	if state == "WORKING":
+		var focus: Vector3 = core.call("work_position", station)
+		focus.z -= 1.0
+		var direction: Vector3 = focus - position
+		rotation.y = atan2(direction.x, direction.z)
+	elif state == "EATING":
+		rotation.y = 0.0
+	elif state == "DRINKING":
+		rotation.y = PI
 	var ledger = core.get("state").resources
 	if state == "DRINKING" and ledger.water > 0:
 		ledger.water -= 1

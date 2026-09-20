@@ -47,6 +47,9 @@ func _initialize() -> void:
 		return
 	wing = bunker.get_node("ServiceWing") as Node3D
 	player = bunker.get("player") as CharacterBody3D
+	# Citizens share layer 2; solids remain layer 1. A player at a control cannot trap a worker.
+	player.collision_layer = 2
+	player.collision_mask = 1
 	camera = bunker.get("gameplay_camera") as Camera3D
 	bunker.set_process(false)
 	bunker.set("power_started", true)
@@ -495,10 +498,10 @@ func refresh_world() -> void:
 func production_feedback(sector: String) -> void:
 	message = {"water": "Água chegou ao reservatório.", "kitchen": "Refeição pronta na cozinha.", "workshop": "Uma peça foi recuperada na oficina."}[sector]
 	refresh_world()
-	var lamp: OmniLight3D = sector_lights[sector] as OmniLight3D
+	var indicator: Node3D = sector_indicators[sector] as Node3D
 	var flash := create_tween()
-	flash.tween_property(lamp, "light_energy", 3.0, 0.15)
-	flash.tween_property(lamp, "light_energy", 2.5, 0.4)
+	flash.tween_property(indicator, "scale", Vector3(1.15, 1.4, 1.15), 0.15)
+	flash.tween_property(indicator, "scale", Vector3.ONE, 0.4)
 
 func save_now() -> bool:
 	if not initialized:

@@ -68,6 +68,7 @@ func _wait_worker(worker: Node, wanted: String, seconds: float = 40.0) -> bool:
 			return true
 		await create_timer(0.2).timeout
 		elapsed += 0.2
+	print("BASE ROUTE DIAGNOSTIC: ", worker.get("state"), " position=", worker.get("position"), " path=", worker.get("path"))
 	return false
 
 func _run() -> void:
