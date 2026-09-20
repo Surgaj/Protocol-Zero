@@ -17,5 +17,7 @@ static func read_data(path: String = PATH) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null or file.get_length() > 262144:
 		return {}
-	var value = JSON.parse_string(file.get_as_text())
-	return value if value is Dictionary else {}
+	var parser := JSON.new()
+	if parser.parse(file.get_as_text()) != OK:
+		return {}
+	return parser.data if parser.data is Dictionary else {}

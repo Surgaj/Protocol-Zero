@@ -85,8 +85,10 @@ func _run() -> void:
 	root.add_child(scene)
 	var controller: Node = scene.get_node("BaseCore")
 	controller.set("save_path", "user://base_integration_test.json")
-	for frame: int in range(20):
-		await process_frame
+	for frame: int in range(80):
+		if controller.get("initialized"):
+			break
+		await create_timer(0.05).timeout
 	check(controller.get("initialized"), "continuous map and base controller load")
 	var player: CharacterBody3D = scene.get("player") as CharacterBody3D
 	player.set_physics_process(false)
@@ -142,6 +144,18 @@ func _run() -> void:
 	for w: Node in controller.get("workers").values():
 		check(w is CharacterBody3D and w.get("collision_mask") == 1, "all survivors use physical collision")
 	scene.queue_free()
+	await process_frame
+	gs.set("survival", loaded.resources)
+	gs.set("base_core", loaded)
+	var reloaded_scene: Node = load("res://scenes/vertical_slice/czi07_base.tscn").instantiate()
+	root.add_child(reloaded_scene)
+	var reloaded_core: Node = reloaded_scene.get_node("BaseCore")
+	reloaded_core.set("save_path", "user://base_integration_test.json")
+	await create_timer(1.0).timeout
+	check(reloaded_core.get("initialized"), "saved base reconstructs into playable scene")
+	check(reloaded_scene.get_node("ServiceWing").get("gates")["services"].collision_layer == 0, "saved opened door remains physically open")
+	check(reloaded_core.get("workers")["iris"].get("station") == "water", "saved worker resumes assigned route")
+	reloaded_scene.queue_free()
 	await process_frame
 	gs.call("reset_new_game")
 	check(not gs.get("base_mode") and gs.get("base_core") == null, "prologue reset remains independent")

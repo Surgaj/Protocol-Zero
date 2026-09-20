@@ -4,7 +4,7 @@ const CELL: float = 0.4
 var grid: AStarGrid2D = AStarGrid2D.new()
 var world: World3D
 
-func rebuild(world_: World3D) -> void:
+func rebuild(world_: World3D, excluded: Array[RID] = []) -> void:
 	world = world_
 	grid.region = Rect2i(-8, -26, 39, 46)
 	grid.cell_size = Vector2(CELL, CELL)
@@ -16,6 +16,7 @@ func rebuild(world_: World3D) -> void:
 	var query := PhysicsShapeQueryParameters3D.new()
 	query.shape = capsule
 	query.collision_mask = 1
+	query.exclude = excluded
 	for x: int in range(grid.region.position.x, grid.region.end.x):
 		for z: int in range(grid.region.position.y, grid.region.end.y):
 			var p := Vector3(x * CELL, 0.93, z * CELL)

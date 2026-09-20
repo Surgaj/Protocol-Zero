@@ -477,7 +477,23 @@ func _settled() -> void:
 		_show_game_over()
 
 func _survival_pressed() -> void:
-	use_survival_action(nearby_survival)
+	var enter_base: bool = nearby_survival == "rest" and GameState.day == 1 and GameState.cough_resolved
+	if not use_survival_action(nearby_survival) or not enter_base:
+		return
+	# After the preserved first day, continue in this same physical bunker.
+	for motion: Tween in motions:
+		if motion.is_valid():
+			motion.kill()
+	active = false
+	set_process(false)
+	GameState.base_mode = true
+	GameState.base_core = GameState.BaseCoreState.new(GameState.survival)
+	GameState.base_core.initialize_resources()
+	GameState.base_core.power.running = true
+	var core := Node3D.new()
+	core.name = "BaseCore"
+	core.set_script(load("res://scripts/base/base_controller.gd"))
+	bunker.add_child(core)
 
 func use_survival_action(source: String) -> bool:
 	if remaining_arrivals > 0 or source.is_empty() or GameState.survival.game_over:

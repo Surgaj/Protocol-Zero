@@ -70,7 +70,7 @@ func _initialize() -> void:
 	refresh_world()
 	await get_tree().physics_frame
 	await get_tree().physics_frame
-	navigation.rebuild(get_world_3d())
+	navigation.rebuild(get_world_3d(), [player.get_rid()])
 	_restore_player()
 	for i: int in range(CoreState.IDS.size()):
 		var id: String = CoreState.IDS[i]
@@ -143,6 +143,13 @@ func _reframe_world() -> void:
 		(label as Label3D).visible = false
 	# Close the old outer edge: all actors remain on the supported continuous floor.
 	_box("EntrySafetyGate", Vector3(5.7, 0.9, 0.2), Vector3(0, 0.45, 7.4), Color("485b54"), true)
+	for item_name: String in ["EntryLocker", "MaintenanceCabinet", "DormLocker"]:
+		var prop: MeshInstance3D = dressing.get_node_or_null(item_name) as MeshInstance3D
+		if prop != null and prop.mesh is BoxMesh:
+			_box(item_name + "Solid", (prop.mesh as BoxMesh).size, prop.position, Color.WHITE, true).get_child(0).set("visible", false)
+	_box("GeneratorFootprint", Vector3(2.1, 1.4, 1.5), Vector3(0, 0.7, -3.25), Color.WHITE, true).get_child(0).set("visible", false)
+	for z: float in [1.72, 2.94]:
+		_box("BenchSolid", Vector3(1.9, 0.45, 0.24), Vector3(6, 0.225, z), Color.WHITE, true).get_child(0).set("visible", false)
 	# Tank/shelf are visible solids, not walk-through decorations in the base simulation.
 	_box("TankCollider", Vector3(0.95, 1.7, 0.80), Vector3(4.15, 0.85, -0.2), Color("617b73"), true).get_child(0).set("visible", false)
 	for crate: MeshInstance3D in wing.get("food_crates"):
@@ -410,7 +417,7 @@ func repair_selected() -> bool:
 func _rebuild_navigation() -> void:
 	await get_tree().physics_frame
 	await get_tree().physics_frame
-	navigation.rebuild(get_world_3d())
+	navigation.rebuild(get_world_3d(), [player.get_rid()])
 	for worker: Node in workers.values():
 		worker.call("reconsider")
 
@@ -500,7 +507,9 @@ func save_now() -> bool:
 	for id: String in workers:
 		var p: Vector3 = (workers[id] as Node3D).position
 		state.saved_positions[id] = [p.x, p.y, p.z]
-	var ok: bool = Save.write(state.snapshot(), save_path) == OK
+	var data: Dictionary = state.snapshot()
+	data["story"] = {"sleep_assignment": GameState.bunker_sleep_assignment, "citizens": GameState.citizens.duplicate(true)}
+	var ok: bool = Save.write(data, save_path) == OK
 	if not ok:
 		message = "Não foi possível salvar neste navegador."
 	return ok
