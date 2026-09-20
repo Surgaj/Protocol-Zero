@@ -65,6 +65,11 @@ func _ready() -> void:
 	wing.name = "ServiceWing"
 	wing.set_script(load("res://scripts/survival/service_wing.gd"))
 	add_child(wing)
+	if GameState.base_mode:
+		var core := Node3D.new()
+		core.name = "BaseCore"
+		core.set_script(load("res://scripts/base/base_controller.gd"))
+		add_child(core)
 	set_process(true)
 
 func _process(delta: float) -> void:

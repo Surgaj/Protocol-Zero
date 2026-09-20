@@ -6,6 +6,9 @@ extends Node
 signal day_phase_changed(phase: int)
 const SurvivalState = preload("res://scripts/survival/survival_state.gd")
 var survival: SurvivalState = SurvivalState.new()
+const BaseCoreState = preload("res://scripts/base/base_state.gd")
+var base_mode: bool = false
+var base_core: BaseCoreState = null
 
 const DAY_PHASES: Array[String] = ["MANHÃ", "MEIO DA MANHÃ", "MEIO-DIA", "TARDE", "FIM DE TARDE", "NOITE"]
 const DAY_OBJECTS: Array[String] = ["generator", "supplies", "entrance", "communication"]
@@ -32,6 +35,8 @@ func ensure_new_run() -> void:
 		reset_new_game()
 
 func reset_new_game() -> void:
+	base_mode = false
+	base_core = null
 	survival = SurvivalState.new()
 	day = 0
 	day_phase = 0

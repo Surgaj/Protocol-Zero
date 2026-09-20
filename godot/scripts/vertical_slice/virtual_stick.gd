@@ -29,6 +29,8 @@ func _draw() -> void:
 	draw_circle(_center + _knob_offset, 29.0, Color(0.82, 0.82, 0.82, 0.62))
 
 func _input(event: InputEvent) -> void:
+	if not is_visible_in_tree():
+		return
 	if event is InputEventScreenTouch:
 		var touch := event as InputEventScreenTouch
 		if touch.pressed and _touch_id == -1 and get_global_rect().has_point(touch.position):
@@ -107,3 +109,9 @@ func _release_actions() -> void:
 	Input.action_release("move_right")
 	Input.action_release("move_forward")
 	Input.action_release("move_back")
+
+
+func release_control() -> void:
+	_touch_id = -1
+	_mouse_active = false
+	_set_vector(Vector2.ZERO)

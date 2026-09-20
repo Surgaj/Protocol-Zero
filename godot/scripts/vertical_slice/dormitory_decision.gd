@@ -61,7 +61,11 @@ func _late_ready() -> void:
 	_build_beds()
 	_build_group_markers()
 	_build_choice_ui()
-	set_process(true)
+	if GameState.base_mode:
+		decision_resolved = true
+		set_process(false)
+	else:
+		set_process(true)
 
 func _process(delta: float) -> void:
 	_pulse_time += delta

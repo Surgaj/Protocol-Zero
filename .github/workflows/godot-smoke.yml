@@ -88,6 +88,16 @@ jobs:
           fi
           grep -q 'SURVIVAL PASS:' survival.log
 
+      - name: Run living base integration tests
+        shell: bash
+        run: |
+          set -o pipefail
+          timeout 180 godot --headless --path godot --script res://tests/base_smoke_test.gd 2>&1 | tee base.log
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|BASE FAIL:' base.log; then
+            exit 1
+          fi
+          grep -q 'BASE PASS:' base.log
+
       - name: Render mobile visual review captures
         shell: bash
         env:
@@ -99,6 +109,18 @@ jobs:
             exit 1
           fi
           grep -q 'VISUAL PASS:' visual.log
+
+      - name: Render living base mobile captures
+        shell: bash
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          set -o pipefail
+          timeout 120 xvfb-run -a godot --path godot --rendering-method gl_compatibility --audio-driver Dummy --script res://tests/base_visual_capture.gd 2>&1 | tee base-visual.log
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|BASE VISUAL FAIL:' base-visual.log; then
+            exit 1
+          fi
+          grep -q 'BASE VISUAL PASS:' base-visual.log
 
       - name: Upload visual review captures
         uses: actions/upload-artifact@v4
